@@ -6,9 +6,16 @@ let stopRequested = false;
 
 // ── Configurações de performance ──────────────────────────────────────────────
 const CHUNK_SIZE     = 2000;  // Blocos menores = resposta mais rápida por chunk
-const MAX_PARALLEL   = 3;     // Máximo de requisições simultâneas ao Gemini
-const MAX_RETRIES    = 2;     // Tentativas em caso de erro temporário
-const RETRY_DELAY_MS = 1500;  // Espera entre tentativas (ms)
+const MAX_PARALLEL   = 1;     // 1 = respeita cota gratuita (10 req/min)
+const MAX_RETRIES    = 3;     // Tentativas em caso de erro temporário
+const RETRY_DELAY_MS = 2000;  // Espera entre tentativas (ms)
+
+// Modelos em ordem de preferência — cai para o próximo se der erro interno
+const TTS_MODELS = [
+  'gemini-2.5-flash-preview-tts',
+  'gemini-2.0-flash-preview-tts',
+  'gemini-2.0-flash-exp',
+];
 
 // ── Inicialização ──────────────────────────────────────────────────────────────
 
@@ -108,48 +115,34 @@ const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 // ── Gemini TTS com retry ──────────────────────────────────────────────────────
 
-async function gerarBloco(key, texto, voiceName, stylePrompt, tentativa = 0) {
-  const model = 'gemini-2.5-flash-preview-tts';
+async function tentarComModelo(key, model, texto, voiceName, stylePrompt) {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
 
   const instrucao = 'Leia o texto a seguir em português do Brasil, com sotaque brasileiro natural, pronúncia clara e fluente.';
   const estilo = stylePrompt ? `${stylePrompt}.` : '';
   const promptText = `${instrucao} ${estilo}\n\n${texto}`;
 
-  let res;
-  try {
-    res = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: promptText }] }],
-        generationConfig: {
-          responseModalities: ['AUDIO'],
-          speechConfig: {
-            voiceConfig: { prebuiltVoiceConfig: { voiceName } }
-          }
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      contents: [{ parts: [{ text: promptText }] }],
+      generationConfig: {
+        responseModalities: ['AUDIO'],
+        speechConfig: {
+          voiceConfig: { prebuiltVoiceConfig: { voiceName } }
         }
-      })
-    });
-  } catch (networkErr) {
-    // Erro de rede — tenta novamente se ainda há tentativas
-    if (tentativa < MAX_RETRIES) {
-      await sleep(RETRY_DELAY_MS * (tentativa + 1));
-      return gerarBloco(key, texto, voiceName, stylePrompt, tentativa + 1);
-    }
-    throw networkErr;
-  }
-
-  // Rate limit (429) ou erro de servidor (5xx): aguarda e tenta de novo
-  if ((res.status === 429 || res.status >= 500) && tentativa < MAX_RETRIES) {
-    await sleep(RETRY_DELAY_MS * (tentativa + 1));
-    return gerarBloco(key, texto, voiceName, stylePrompt, tentativa + 1);
-  }
+      }
+    })
+  });
 
   if (!res.ok) {
     let err = {};
     try { err = await res.json(); } catch (e) {}
-    throw new Error(err?.error?.message || `Erro HTTP ${res.status} — verifique sua API Key.`);
+    const msg = err?.error?.message || `Erro HTTP ${res.status}`;
+    const isInternal = res.status === 500 || (msg.toLowerCase().includes('internal'));
+    const isRateLimit = res.status === 429;
+    throw Object.assign(new Error(msg), { isInternal, isRateLimit, status: res.status });
   }
 
   const data = await res.json();
@@ -157,7 +150,7 @@ async function gerarBloco(key, texto, voiceName, stylePrompt, tentativa = 0) {
 
   if (!part?.data) {
     console.error('Resposta Gemini inesperada:', JSON.stringify(data));
-    throw new Error('Sem dados de áudio na resposta. Abra o console (F12) para detalhes.');
+    throw Object.assign(new Error('Sem dados de áudio na resposta.'), { isInternal: true });
   }
 
   const bytes = Uint8Array.from(atob(part.data), c => c.charCodeAt(0));
@@ -168,6 +161,41 @@ async function gerarBloco(key, texto, voiceName, stylePrompt, tentativa = 0) {
   } else {
     const rate = parseSampleRate(mime);
     return pcmToWavBlob(bytes, rate);
+  }
+}
+
+async function gerarBloco(key, texto, voiceName, stylePrompt, modelIdx = 0, tentativa = 0) {
+  if (modelIdx >= TTS_MODELS.length) {
+    throw new Error('Todos os modelos falharam. Tente novamente em alguns minutos.');
+  }
+
+  const model = TTS_MODELS[modelIdx];
+
+  try {
+    return await tentarComModelo(key, model, texto, voiceName, stylePrompt);
+  } catch (e) {
+    // Rate limit: aguarda o tempo indicado na mensagem e tenta no mesmo modelo
+    if (e.isRateLimit && tentativa < MAX_RETRIES) {
+      const match = e.message.match(/retry in ([\d.]+)s/i);
+      const espera = match ? Math.ceil(parseFloat(match[1])) * 1000 : RETRY_DELAY_MS * (tentativa + 1);
+      setStatus(`⏳ Rate limit — aguardando ${Math.ceil(espera / 1000)}s...`);
+      await sleep(espera);
+      return gerarBloco(key, texto, voiceName, stylePrompt, modelIdx, tentativa + 1);
+    }
+
+    // Erro interno: tenta o próximo modelo
+    if (e.isInternal) {
+      console.warn(`Modelo ${model} falhou com erro interno. Tentando próximo...`);
+      return gerarBloco(key, texto, voiceName, stylePrompt, modelIdx + 1, 0);
+    }
+
+    // Erro de rede: tenta de novo no mesmo modelo
+    if (!e.status && tentativa < MAX_RETRIES) {
+      await sleep(RETRY_DELAY_MS * (tentativa + 1));
+      return gerarBloco(key, texto, voiceName, stylePrompt, modelIdx, tentativa + 1);
+    }
+
+    throw e;
   }
 }
 
