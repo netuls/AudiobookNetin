@@ -1,4 +1,6 @@
-let savedKey = '';
+const DEFAULT_KEY = 'AIzaSyDQxoKbTiMMfwNQE3btfi1XKCNA0gSaCyE';
+
+let savedKey = DEFAULT_KEY;
 let currentObjectURL = null;
 let stopRequested = false;
 
@@ -7,13 +9,11 @@ const CHUNK_SIZE = 8000;
 // ── Inicialização ──────────────────────────────────────────────────────────────
 
 window.addEventListener('DOMContentLoaded', () => {
-  const saved = localStorage.getItem('gemini_api_key');
-  if (saved) {
-    savedKey = saved;
-    document.getElementById('apikey').value = saved;
-    setKeyStatus('✓ API Key carregada automaticamente.', true);
-    setStatus('Pronto! Digite o texto e clique em Gerar voz.');
-  }
+  const stored = localStorage.getItem('gemini_api_key') || DEFAULT_KEY;
+  savedKey = stored;
+  document.getElementById('apikey').value = stored;
+  setKeyStatus('✓ API Key carregada automaticamente.', true);
+  setStatus('Pronto! Digite o texto e clique em Gerar voz.');
 });
 
 // ── Contagem de caracteres ────────────────────────────────────────────────────
@@ -59,7 +59,7 @@ function dividirTexto(texto, tamanhoMax) {
   return blocos.filter(b => b.length > 0);
 }
 
-// ── Concatenar áudios ─────────────────────────────────────────────────────────
+// ── Concatenar Blobs de áudio ─────────────────────────────────────────────────
 
 async function concatenarAudios(blobs) {
   const buffers = await Promise.all(blobs.map(b => b.arrayBuffer()));
@@ -70,40 +70,10 @@ async function concatenarAudios(blobs) {
     merged.set(new Uint8Array(buf), offset);
     offset += buf.byteLength;
   }
-  return new Blob([merged], { type: 'audio/wav' });
+  return new Blob([merged], { type: blobs[0].type });
 }
 
-// ── Gemini TTS ────────────────────────────────────────────────────────────────
-
-async function gerarBloco(key, texto, voiceName, stylePrompt) {
-  const model = 'gemini-2.5-flash-preview-tts';
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
-  const promptText = stylePrompt ? `${stylePrompt}: ${texto}` : texto;
-
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      contents: [{ parts: [{ text: promptText }] }],
-      generationConfig: {
-        responseModalities: ['AUDIO'],
-        speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName } } }
-      }
-    })
-  });
-
-  if (!res.ok) {
-    let err = {}; try { err = await res.json(); } catch (e) {}
-    throw new Error(err?.error?.message || `Erro HTTP ${res.status} — verifique sua API Key.`);
-  }
-
-  const data = await res.json();
-  const b64 = data?.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
-  if (!b64) throw new Error('Sem dados de áudio na resposta. Tente novamente.');
-
-  const pcm = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
-  return pcmToWavBlob(pcm, 24000);
-}
+// ── Converte PCM L16 bruto para WAV ──────────────────────────────────────────
 
 function pcmToWavBlob(pcmData, sampleRate = 24000) {
   const numChannels = 1, bitsPerSample = 16;
@@ -122,14 +92,65 @@ function pcmToWavBlob(pcmData, sampleRate = 24000) {
   return new Blob([buffer], { type: 'audio/wav' });
 }
 
+function parseSampleRate(mimeType, defaultRate = 24000) {
+  if (!mimeType) return defaultRate;
+  const match = mimeType.match(/rate=(\d+)/);
+  return match ? parseInt(match[1]) : defaultRate;
+}
+
+// ── Gemini TTS ────────────────────────────────────────────────────────────────
+
+async function gerarBloco(key, texto, voiceName, stylePrompt) {
+  const model = 'gemini-2.5-flash-preview-tts';
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
+  const promptText = stylePrompt ? `${stylePrompt}: ${texto}` : texto;
+
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      contents: [{ parts: [{ text: promptText }] }],
+      generationConfig: {
+        responseModalities: ['AUDIO'],
+        speechConfig: {
+          voiceConfig: { prebuiltVoiceConfig: { voiceName } }
+        }
+      }
+    })
+  });
+
+  if (!res.ok) {
+    let err = {};
+    try { err = await res.json(); } catch (e) {}
+    throw new Error(err?.error?.message || `Erro HTTP ${res.status} — verifique sua API Key.`);
+  }
+
+  const data = await res.json();
+  const part = data?.candidates?.[0]?.content?.parts?.[0]?.inlineData;
+
+  if (!part?.data) {
+    console.error('Resposta Gemini inesperada:', JSON.stringify(data));
+    throw new Error('Sem dados de áudio na resposta. Abra o console (F12) para detalhes.');
+  }
+
+  const bytes = Uint8Array.from(atob(part.data), c => c.charCodeAt(0));
+  const mime  = part.mimeType || '';
+
+  if (mime.startsWith('audio/mp3') || mime.startsWith('audio/mpeg')) {
+    return new Blob([bytes], { type: 'audio/mpeg' });
+  } else {
+    const rate = parseSampleRate(mime);
+    return pcmToWavBlob(bytes, rate);
+  }
+}
+
 // ── Geração principal ─────────────────────────────────────────────────────────
 
 async function gerarVoz() {
-  const key = savedKey || localStorage.getItem('gemini_api_key') || document.getElementById('apikey').value.trim();
+  const key = savedKey || DEFAULT_KEY;
   const txt = document.getElementById('txt').value.trim();
 
-  if (!key) { setStatus('Cole sua API Key do Google AI Studio primeiro!'); return; }
-  if (!txt) { setStatus('Digite algum texto primeiro!'); return; }
+  if (!txt) { setStatus('❌ Digite algum texto primeiro!'); return; }
 
   const voiceName   = document.getElementById('voice').value;
   const stylePrompt = document.getElementById('style').value.trim();
@@ -149,7 +170,12 @@ async function gerarVoz() {
     const audioBlobs = [];
 
     for (let i = 0; i < blocos.length; i++) {
-      if (stopRequested) { setStatus('Cancelado.'); setProgress(0); document.getElementById('btnPlay').disabled = false; return; }
+      if (stopRequested) {
+        setStatus('Cancelado.');
+        setProgress(0);
+        document.getElementById('btnPlay').disabled = false;
+        return;
+      }
       setStatus(`Gerando parte ${i + 1} de ${total}...`);
       setProgress(5 + Math.round((i / total) * 85));
       audioBlobs.push(await gerarBloco(key, blocos[i], voiceName, stylePrompt));
@@ -168,14 +194,15 @@ async function gerarVoz() {
     player.src = currentObjectURL;
     document.getElementById('player-wrap').style.display = 'block';
     player.play();
-    player.onplay  = () => { setStatus('Reproduzindo...'); setProgress(100); };
-    player.onended = () => setStatus('Concluído!');
+    player.onplay  = () => { setStatus('▶ Reproduzindo...'); setProgress(100); };
+    player.onended = () => setStatus('✓ Concluído!');
 
     document.getElementById('btnDownload').disabled = false;
-    setStatus('Voz gerada com sucesso!');
+    setStatus('✓ Voz gerada com sucesso!');
 
   } catch (e) {
-    setStatus('Erro: ' + e.message);
+    console.error('Erro ao gerar voz:', e);
+    setStatus('❌ Erro: ' + e.message);
     setProgress(0);
   }
 
