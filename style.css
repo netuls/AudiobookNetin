@@ -34,59 +34,6 @@ header .subtitle {
   color: #666;
 }
 
-/* Abas */
-.tabs {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 1rem;
-}
-
-.tab {
-  flex: 1;
-  padding: 10px 16px;
-  border-radius: 10px;
-  border: 0.5px solid #ccc;
-  background: #fff;
-  color: #666;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-}
-
-.tab:hover {
-  background: #f0f0f0;
-}
-
-.tab-active {
-  background: #1a1a1a;
-  color: #fff;
-  border-color: #1a1a1a;
-}
-
-.tab-active:hover {
-  background: #333;
-}
-
-.badge-free {
-  background: #22c55e;
-  color: #fff;
-  font-size: 10px;
-  font-weight: 700;
-  padding: 2px 6px;
-  border-radius: 99px;
-  letter-spacing: 0.03em;
-}
-
-.tab-active .badge-free {
-  background: #16a34a;
-}
-
-/* Cards */
 .card {
   background: #fff;
   border-radius: 14px;
@@ -129,20 +76,14 @@ input[type="password"] {
 }
 
 input:focus, textarea:focus, select:focus {
-  border-color: #7F77DD;
-  box-shadow: 0 0 0 3px rgba(127, 119, 221, 0.12);
+  border-color: #4285f4;
+  box-shadow: 0 0 0 3px rgba(66, 133, 244, 0.12);
 }
 
 textarea {
   resize: vertical;
   min-height: 140px;
   line-height: 1.6;
-}
-
-input[type="range"] {
-  width: 100%;
-  accent-color: #7F77DD;
-  margin-top: 4px;
 }
 
 .hint {
@@ -152,7 +93,7 @@ input[type="range"] {
 }
 
 .hint a {
-  color: #7F77DD;
+  color: #4285f4;
   text-decoration: none;
 }
 
@@ -176,9 +117,6 @@ input[type="range"] {
 @media (max-width: 500px) {
   .controls-grid {
     grid-template-columns: 1fr;
-  }
-  .tabs {
-    flex-direction: column;
   }
 }
 
@@ -204,21 +142,21 @@ button:active {
 }
 
 .btn-primary {
-  background: #7F77DD;
+  background: #4285f4;
   color: #fff;
-  border-color: #6a62c4;
+  border-color: #3367d6;
   font-weight: 500;
   font-size: 15px;
   padding: 11px 24px;
 }
 
 .btn-primary:hover {
-  background: #6a62c4;
+  background: #3367d6;
 }
 
 .btn-primary:disabled {
-  background: #b0abeb;
-  border-color: #b0abeb;
+  background: #a8c4f8;
+  border-color: #a8c4f8;
   cursor: not-allowed;
 }
 
@@ -236,14 +174,14 @@ button:active {
   cursor: not-allowed;
 }
 
-#btnSaveKey, .key-row button {
+#btnSaveKey {
   white-space: nowrap;
   background: #f5f4f0;
   padding: 10px 16px;
   min-width: 80px;
 }
 
-#btnSaveKey:hover, .key-row button:hover {
+#btnSaveKey:hover {
   background: #e8e7e2;
 }
 
@@ -258,7 +196,7 @@ button:active {
 .progress-fill {
   height: 100%;
   width: 0%;
-  background: #7F77DD;
+  background: #4285f4;
   border-radius: 3px;
   transition: width 0.5s ease;
 }
@@ -299,7 +237,7 @@ button:active {
 }
 
 .instrucoes a {
-  color: #7F77DD;
+  color: #4285f4;
   text-decoration: none;
 }
 
@@ -311,6 +249,6 @@ footer {
 }
 
 footer a {
-  color: #7F77DD;
+  color: #4285f4;
   text-decoration: none;
 }
