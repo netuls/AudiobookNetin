@@ -103,7 +103,11 @@ function parseSampleRate(mimeType, defaultRate = 24000) {
 async function gerarBloco(key, texto, voiceName, stylePrompt) {
   const model = 'gemini-2.5-flash-preview-tts';
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
-  const promptText = stylePrompt ? `${stylePrompt}: ${texto}` : texto;
+
+  // Força sotaque e pronúncia do português brasileiro
+  const instrucao = 'Leia o texto a seguir em português do Brasil, com sotaque brasileiro natural, pronúncia clara e fluente.';
+  const estilo = stylePrompt ? `${stylePrompt}.` : '';
+  const promptText = `${instrucao} ${estilo}\n\n${texto}`;
 
   const res = await fetch(url, {
     method: 'POST',
