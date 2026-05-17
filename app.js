@@ -4,7 +4,11 @@ let savedKey = DEFAULT_KEY;
 let currentObjectURL = null;
 let stopRequested = false;
 
-const CHUNK_SIZE = 8000;
+// ── Configurações de performance ──────────────────────────────────────────────
+const CHUNK_SIZE     = 2000;  // Blocos menores = resposta mais rápida por chunk
+const MAX_PARALLEL   = 3;     // Máximo de requisições simultâneas ao Gemini
+const MAX_RETRIES    = 2;     // Tentativas em caso de erro temporário
+const RETRY_DELAY_MS = 1500;  // Espera entre tentativas (ms)
 
 // ── Inicialização ──────────────────────────────────────────────────────────────
 
@@ -98,30 +102,49 @@ function parseSampleRate(mimeType, defaultRate = 24000) {
   return match ? parseInt(match[1]) : defaultRate;
 }
 
-// ── Gemini TTS ────────────────────────────────────────────────────────────────
+// ── Delay utilitário ──────────────────────────────────────────────────────────
 
-async function gerarBloco(key, texto, voiceName, stylePrompt) {
+const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+// ── Gemini TTS com retry ──────────────────────────────────────────────────────
+
+async function gerarBloco(key, texto, voiceName, stylePrompt, tentativa = 0) {
   const model = 'gemini-2.5-flash-preview-tts';
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
 
-  // Força sotaque e pronúncia do português brasileiro
   const instrucao = 'Leia o texto a seguir em português do Brasil, com sotaque brasileiro natural, pronúncia clara e fluente.';
   const estilo = stylePrompt ? `${stylePrompt}.` : '';
   const promptText = `${instrucao} ${estilo}\n\n${texto}`;
 
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      contents: [{ parts: [{ text: promptText }] }],
-      generationConfig: {
-        responseModalities: ['AUDIO'],
-        speechConfig: {
-          voiceConfig: { prebuiltVoiceConfig: { voiceName } }
+  let res;
+  try {
+    res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: promptText }] }],
+        generationConfig: {
+          responseModalities: ['AUDIO'],
+          speechConfig: {
+            voiceConfig: { prebuiltVoiceConfig: { voiceName } }
+          }
         }
-      }
-    })
-  });
+      })
+    });
+  } catch (networkErr) {
+    // Erro de rede — tenta novamente se ainda há tentativas
+    if (tentativa < MAX_RETRIES) {
+      await sleep(RETRY_DELAY_MS * (tentativa + 1));
+      return gerarBloco(key, texto, voiceName, stylePrompt, tentativa + 1);
+    }
+    throw networkErr;
+  }
+
+  // Rate limit (429) ou erro de servidor (5xx): aguarda e tenta de novo
+  if ((res.status === 429 || res.status >= 500) && tentativa < MAX_RETRIES) {
+    await sleep(RETRY_DELAY_MS * (tentativa + 1));
+    return gerarBloco(key, texto, voiceName, stylePrompt, tentativa + 1);
+  }
 
   if (!res.ok) {
     let err = {};
@@ -148,6 +171,31 @@ async function gerarBloco(key, texto, voiceName, stylePrompt) {
   }
 }
 
+// ── Geração em paralelo com fila controlada ───────────────────────────────────
+
+async function processarEmParalelo(blocos, key, voiceName, stylePrompt, onProgresso) {
+  const total    = blocos.length;
+  const results  = new Array(total);
+  let concluidos = 0;
+  let indice     = 0;
+
+  async function worker() {
+    while (indice < total) {
+      if (stopRequested) return;
+      const i = indice++;
+      results[i] = await gerarBloco(key, blocos[i], voiceName, stylePrompt);
+      concluidos++;
+      onProgresso(concluidos, total);
+    }
+  }
+
+  // Lança até MAX_PARALLEL workers simultâneos
+  const workers = Array.from({ length: Math.min(MAX_PARALLEL, total) }, () => worker());
+  await Promise.all(workers);
+
+  return results;
+}
+
 // ── Geração principal ─────────────────────────────────────────────────────────
 
 async function gerarVoz() {
@@ -167,27 +215,31 @@ async function gerarVoz() {
   const blocos = dividirTexto(txt, CHUNK_SIZE);
   const total  = blocos.length;
 
-  setStatus(total > 1 ? `Texto dividido em ${total} partes. Gerando...` : 'Conectando ao Gemini...');
+  setStatus(total > 1
+    ? `Texto dividido em ${total} partes. Gerando em paralelo...`
+    : 'Conectando ao Gemini...');
   setProgress(5);
 
   try {
-    const audioBlobs = [];
-
-    for (let i = 0; i < blocos.length; i++) {
-      if (stopRequested) {
-        setStatus('Cancelado.');
-        setProgress(0);
-        document.getElementById('btnPlay').disabled = false;
-        return;
+    const audioBlobs = await processarEmParalelo(
+      blocos, key, voiceName, stylePrompt,
+      (concluidos, total) => {
+        if (!stopRequested) {
+          setStatus(`Gerando... ${concluidos}/${total} partes prontas`);
+          setProgress(5 + Math.round((concluidos / total) * 85));
+        }
       }
-      setStatus(`Gerando parte ${i + 1} de ${total}...`);
-      setProgress(5 + Math.round((i / total) * 85));
-      audioBlobs.push(await gerarBloco(key, blocos[i], voiceName, stylePrompt));
-      setProgress(5 + Math.round(((i + 1) / total) * 85));
+    );
+
+    if (stopRequested) {
+      setStatus('Cancelado.');
+      setProgress(0);
+      document.getElementById('btnPlay').disabled = false;
+      return;
     }
 
     setStatus(total > 1 ? 'Unindo partes de áudio...' : 'Finalizando...');
-    setProgress(92);
+    setProgress(93);
 
     const audioFinal = total > 1 ? await concatenarAudios(audioBlobs) : audioBlobs[0];
 
