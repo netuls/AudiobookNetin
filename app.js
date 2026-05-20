@@ -30,7 +30,7 @@ let filterText     = '';
 let filterMember   = '';
 let sortMode       = 'newest';
 
-// ── [NOVO] Sincronizar filtros com a URL ──
+// ── Sincronizar filtros com a URL ──
 function readFiltersFromURL() {
   const params = new URLSearchParams(window.location.search);
   filterText   = params.get('q')      || '';
@@ -49,20 +49,16 @@ function pushFiltersToURL() {
   history.replaceState(null, '', newURL);
 }
 
-// Lê os filtros da URL antes do primeiro render
+// Inicialização de filtros antes de renderizar
 readFiltersFromURL();
-
-// ── Renderiza imediatamente ──
 render();
 
-// Sincroniza os controles visuais com os filtros da URL
+// Sincroniza os controles visuais existentes na página (Corrigido ponto 2)
 (function syncControls() {
   const searchInput   = document.getElementById('search-input');
   const memberSelect  = document.getElementById('member-select');
-  const sortSelect    = document.getElementById('sort-select'); // ajuste o id se diferente
   if (searchInput)  searchInput.value  = filterText;
   if (memberSelect) memberSelect.value = filterMember;
-  if (sortSelect)   sortSelect.value   = sortMode;
 })();
 
 // ── Escutar Firebase em tempo real ──
@@ -93,9 +89,7 @@ function filterItems(items) {
   return items.filter(i => i.name.toLowerCase().includes(filterText.toLowerCase()));
 }
 
-// ── [NOVO] Notificação de erro inline ──
 function showError(message) {
-  // Remove qualquer toast de erro existente
   const existing = document.getElementById('error-toast');
   if (existing) existing.remove();
 
@@ -108,8 +102,7 @@ function showError(message) {
   `;
   document.body.appendChild(toast);
 
-  // Auto-remove após 6 segundos
-  setTimeout(() => toast && toast.remove(), 6000);
+  setTimeout(() => { if(toast.parentElement) toast.remove(); }, 6000);
 }
 
 // ── Adicionar ──
@@ -118,7 +111,7 @@ function add(member) {
   const val = inp.value.trim();
   if (!val) return;
 
-  const btn = inp.nextElementSibling; // botão +
+  const btn = inp.nextElementSibling;
   inp.disabled = true;
   if (btn) btn.disabled = true;
 
@@ -154,16 +147,18 @@ function startEdit(member, firebaseKey) {
   if (!item) return;
   const el = document.getElementById('item-' + firebaseKey);
   if (!el) return;
+  
   el.innerHTML = `
     <input class="edit-input" id="edit-${firebaseKey}" value="${item.name.replace(/"/g, '&quot;')}" />
-    <button class="edit-save-btn" onclick="saveEdit('${member}', '${firebaseKey}')">✓</button>
-    <button class="edit-cancel-btn" onclick="render()">✕</button>
+    <button class="edit-save-btn" onclick="window.saveEdit('${member}', '${firebaseKey}')" aria-label="Salvar">✓</button>
+    <button class="edit-cancel-btn" onclick="window.render()" aria-label="Cancelar">✕</button>
   `;
+  
   const inp = document.getElementById('edit-' + firebaseKey);
   inp.focus();
   inp.addEventListener('keydown', e => {
-    if (e.key === 'Enter')  saveEdit(member, firebaseKey);
-    if (e.key === 'Escape') render();
+    if (e.key === 'Enter')  window.saveEdit(member, firebaseKey);
+    if (e.key === 'Escape') window.render();
   });
 }
 
@@ -173,7 +168,6 @@ function saveEdit(member, firebaseKey) {
   const val = inp.value.trim();
   if (!val) return;
 
-  // Desabilita controles durante o save
   inp.disabled = true;
   const saveBtn   = inp.nextElementSibling;
   const cancelBtn = saveBtn ? saveBtn.nextElementSibling : null;
@@ -182,10 +176,12 @@ function saveEdit(member, firebaseKey) {
 
   const itemRef = ref(db, `melhorias/${member}/${firebaseKey}`);
   update(itemRef, { name: val })
+    .then(() => {
+      window.render();
+    })
     .catch(err => {
       console.error('Erro ao editar:', err);
       showError('Não foi possível salvar a edição. Verifique sua conexão.');
-      // Reabilita para nova tentativa
       if (inp)       inp.disabled       = false;
       if (saveBtn)   saveBtn.disabled   = false;
       if (cancelBtn) cancelBtn.disabled = false;
@@ -224,7 +220,6 @@ function confirmDelete() {
   const item    = localData[member][firebaseKey];
   const itemRef = ref(db, `melhorias/${member}/${firebaseKey}`);
 
-  // Fecha o modal imediatamente para boa UX
   closeModal();
 
   remove(itemRef)
@@ -244,7 +239,7 @@ function showUndo(member, item) {
   const toast = document.getElementById('undo-toast');
   document.getElementById('undo-label').textContent = `"${item.name.length > 30 ? item.name.slice(0,30)+'…' : item.name}" removido`;
   toast.classList.add('show');
-  undoTimeout = setTimeout(hideUndo, 5000);
+  undoTimeout = setTimeout(window.hideUndo, 5000);
 }
 
 function hideUndo() {
@@ -261,26 +256,20 @@ function doUndo() {
       console.error('Erro ao desfazer:', err);
       showError('Não foi possível desfazer. Verifique sua conexão.');
     });
-  hideUndo();
+  window.hideUndo();
 }
 
-// ── Filtros (agora sincronizam com a URL) ──
+// ── Filtros ──
 function applyFilter(val) {
   filterText = val;
   pushFiltersToURL();
-  render();
-}
-
-function applySort(val) {
-  sortMode = val;
-  pushFiltersToURL();
-  render();
+  window.render();
 }
 
 function applyMemberFilter(val) {
   filterMember = val;
   pushFiltersToURL();
-  render();
+  window.render();
 }
 
 // ── Exportar Excel ──
@@ -297,7 +286,7 @@ function exportExcel() {
   XLSX.writeFile(wb, 'stark-csat.xlsx');
 }
 
-// ── Render ──
+// ── Render (Acessibilidade + Estabilidade do Ponto 3 e 4) ──
 function render() {
   let total = 0;
   MEMBERS.forEach(m => { total += Object.keys(localData[m] || {}).length; });
@@ -318,7 +307,6 @@ function render() {
 
     if (filterText.trim() !== '' && items.length === 0) return '';
 
-    // [NOVO] Botões com aria-label e classe touch-friendly
     const itemsHTML = items.length
       ? items.map(it => `
           <div class="citem" id="item-${it.key}">
@@ -326,8 +314,8 @@ function render() {
               <span class="citem-name">${it.name}</span>
               <span class="citem-date">${formatDate(it.ts)}</span>
             </div>
-            <button class="citem-edit icon-btn" onclick="startEdit('${m}', '${it.key}')" title="Editar" aria-label="Editar melhoria">✎</button>
-            <button class="citem-del icon-btn"  onclick="removeItem('${m}', '${it.key}')" title="Deletar" aria-label="Deletar melhoria">×</button>
+            <button class="citem-edit icon-btn" onclick="window.startEdit('${m}', '${it.key}')" title="Editar" aria-label="Editar melhoria">✎</button>
+            <button class="citem-del icon-btn"  onclick="window.removeItem('${m}', '${it.key}')" title="Deletar" aria-label="Deletar melhoria">×</button>
           </div>`).join('')
       : `<div class="empty-msg">nenhum registro ainda</div>`;
 
@@ -345,16 +333,16 @@ function render() {
               id="i-${m}"
               placeholder="Nova melhoria..."
               rows="2"
-              onkeydown="if(event.key==='Enter' && !event.shiftKey){ event.preventDefault(); add('${m}'); }"
+              onkeydown="if(event.key==='Enter' && !event.shiftKey){ event.preventDefault(); window.add('${m}'); }"
             ></textarea>
-            <button class="add-btn" onclick="add('${m}')">+</button>
+            <button class="add-btn" onclick="window.add('${m}')">+</button>
           </div>
         </div>
       </div>`;
   }).join('');
 }
 
-// ── Expor funções globais ──
+// ── Expor funções globais de forma explícita ──
 window.add           = add;
 window.startEdit     = startEdit;
 window.saveEdit      = saveEdit;
@@ -362,6 +350,7 @@ window.removeItem    = removeItem;
 window.closeModal    = closeModal;
 window.confirmDelete = confirmDelete;
 window.render        = render;
+window.hideUndo      = hideUndo;
 
 // ── Eventos globais ──
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
@@ -373,9 +362,9 @@ document.getElementById('search-input').addEventListener('input',  e => applyFil
 document.getElementById('member-select').addEventListener('change', e => applyMemberFilter(e.target.value));
 document.getElementById('export-btn').addEventListener('click', exportExcel);
 document.getElementById('undo-btn').addEventListener('click', doUndo);
-document.getElementById('undo-close').addEventListener('click', hideUndo);
+document.getElementById('undo-close').addEventListener('click', window.hideUndo);
 
-// ── Auto-resize das textareas de adicionar ──
+// Auto-resize dinâmico atrelado ao contêiner raiz estável (Correção ponto 3)
 document.getElementById('body').addEventListener('input', e => {
   if (e.target.classList.contains('add-input')) {
     e.target.style.height = 'auto';
@@ -383,15 +372,11 @@ document.getElementById('body').addEventListener('input', e => {
   }
 });
 
-// Suporte ao botão Voltar/Avançar do navegador
 window.addEventListener('popstate', () => {
   readFiltersFromURL();
-  // Sincroniza controles visuais
   const searchInput  = document.getElementById('search-input');
   const memberSelect = document.getElementById('member-select');
-  const sortSelect   = document.getElementById('sort-select');
   if (searchInput)  searchInput.value  = filterText;
   if (memberSelect) memberSelect.value = filterMember;
-  if (sortSelect)   sortSelect.value   = sortMode;
-  render();
+  window.render();
 });
