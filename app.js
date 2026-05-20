@@ -300,24 +300,27 @@ function closeSuggestionModal() {
 }
 
 function submitSuggestion() {
-  const name = document.getElementById('suggestion-name').value.trim();
-  const text = document.getElementById('suggestion-text').value.trim();
-  const err = document.getElementById('suggestion-err');
+  const name  = document.getElementById('suggestion-name').value.trim();
+  const text  = document.getElementById('suggestion-text').value.trim();
+  const errEl = document.getElementById('suggestion-err');
 
   if (!name || !text) {
-    err.textContent = 'Por favor, preencha todos os campos.';
+    errEl.textContent = 'Por favor, preencha todos os campos.';
     return;
   }
 
   if (name.length < 2) {
-    err.textContent = 'Nome deve ter pelo menos 2 caracteres.';
+    errEl.textContent = 'Nome deve ter pelo menos 2 caracteres.';
     return;
   }
 
   if (text.length < 10) {
-    err.textContent = 'Sugestão deve ter pelo menos 10 caracteres.';
+    errEl.textContent = 'Sugestão deve ter pelo menos 10 caracteres.';
     return;
   }
+
+  const sendBtn = document.querySelector('#suggestion-modal .modal-btn-confirm');
+  if (sendBtn) { sendBtn.disabled = true; sendBtn.textContent = 'Enviando...'; }
 
   const suggestionsRef = ref(db, 'sugestoes');
   push(suggestionsRef, {
@@ -329,10 +332,105 @@ function submitSuggestion() {
       showSuccess('Sugestão enviada com sucesso! 🎉');
       closeSuggestionModal();
     })
-    .catch(err => {
-      console.error('Erro ao enviar sugestão:', err);
-      document.getElementById('suggestion-err').textContent = 'Erro ao enviar. Tente novamente.';
+    .catch(firebaseErr => {
+      console.error('Erro ao enviar sugestão:', firebaseErr);
+      errEl.textContent = 'Erro ao enviar. Verifique sua conexão e tente novamente.';
+    })
+    .finally(() => {
+      if (sendBtn) { sendBtn.disabled = false; sendBtn.textContent = 'Enviar Sugestão'; }
     });
+}
+
+// ── Painel de Sugestões ──
+let localSuggestions = {};
+
+const suggestoesRef = ref(db, 'sugestoes');
+onValue(suggestoesRef, snapshot => {
+  localSuggestions = snapshot.val() || {};
+  const panel = document.getElementById('suggestions-panel');
+  if (panel && panel.style.display !== 'none') {
+    renderSuggestionsPanel();
+  }
+});
+
+const SUGGESTIONS_PASSWORD = 'gta123gta';
+
+function openSuggestionsPanel() {
+  // Abre modal de senha antes de exibir o painel
+  const pwModal = document.getElementById('suggestions-pw-modal');
+  if (pwModal) {
+    pwModal.style.display = 'flex';
+    setTimeout(() => {
+      const inp = document.getElementById('suggestions-pw-input');
+      if (inp) inp.focus();
+    }, 50);
+  }
+}
+
+function closeSuggestionsPwModal() {
+  const pwModal = document.getElementById('suggestions-pw-modal');
+  if (pwModal) pwModal.style.display = 'none';
+  const inp = document.getElementById('suggestions-pw-input');
+  if (inp) inp.value = '';
+  const err = document.getElementById('suggestions-pw-err');
+  if (err) err.textContent = '';
+}
+
+function confirmSuggestionsPassword() {
+  const inp = document.getElementById('suggestions-pw-input');
+  const err = document.getElementById('suggestions-pw-err');
+  if (inp.value !== SUGGESTIONS_PASSWORD) {
+    inp.classList.add('error');
+    err.textContent = 'Senha incorreta. Tente novamente.';
+    inp.value = '';
+    setTimeout(() => inp.classList.remove('error'), 400);
+    return;
+  }
+  closeSuggestionsPwModal();
+  const panel = document.getElementById('suggestions-panel');
+  if (!panel) return;
+  panel.style.display = 'flex';
+  renderSuggestionsPanel();
+}
+
+function closeSuggestionsPanel() {
+  const panel = document.getElementById('suggestions-panel');
+  if (panel) panel.style.display = 'none';
+}
+
+function deleteSuggestion(key) {
+  const itemRef = ref(db, 'sugestoes/' + key);
+  remove(itemRef).catch(e => {
+    console.error('Erro ao deletar sugestão:', e);
+    showError('Não foi possível deletar a sugestão.');
+  });
+}
+
+function renderSuggestionsPanel() {
+  const list = document.getElementById('suggestions-list');
+  if (!list) return;
+
+  const items = Object.entries(localSuggestions)
+    .map(([key, val]) => ({ ...val, key }))
+    .sort((a, b) => b.ts - a.ts);
+
+  document.getElementById('suggestions-count').textContent = items.length;
+
+  if (items.length === 0) {
+    list.innerHTML = '<div class="suggestions-empty">Nenhuma sugestão recebida ainda.</div>';
+    return;
+  }
+
+  list.innerHTML = items.map(it => `
+    <div class="suggestion-item">
+      <div class="suggestion-item-header">
+        <span class="suggestion-item-name">👤 ${it.name}</span>
+        <span class="suggestion-item-date">${formatDate(it.ts)}</span>
+        <button class="suggestion-item-del" onclick="deleteSuggestion('${it.key}')" title="Deletar">×</button>
+      </div>
+      <div class="suggestion-item-text">${it.texto}</div>
+    </div>
+  `).join('');
 }
 
 // ── Filtros ──
@@ -437,6 +535,11 @@ window.render                 = render;
 window.openSuggestionModal    = openSuggestionModal;
 window.closeSuggestionModal   = closeSuggestionModal;
 window.submitSuggestion       = submitSuggestion;
+window.openSuggestionsPanel      = openSuggestionsPanel;
+window.closeSuggestionsPwModal   = closeSuggestionsPwModal;
+window.confirmSuggestionsPassword = confirmSuggestionsPassword;
+window.closeSuggestionsPanel  = closeSuggestionsPanel;
+window.deleteSuggestion       = deleteSuggestion;
 
 // ── Esperar DOM estar pronto ──
 function setupEventListeners() {
@@ -447,6 +550,8 @@ function setupEventListeners() {
     if (e.key === 'Escape') {
       closeModal();
       closeSuggestionModal();
+      closeSuggestionsPanel();
+      closeSuggestionsPwModal();
     }
   });
 
@@ -474,6 +579,12 @@ function setupEventListeners() {
   const exportBtn = document.getElementById('export-btn');
   if (exportBtn) {
     exportBtn.addEventListener('click', exportExcel);
+  }
+
+  // Botão ver sugestões
+  const viewSuggestionsBtn = document.getElementById('view-suggestions-btn');
+  if (viewSuggestionsBtn) {
+    viewSuggestionsBtn.addEventListener('click', openSuggestionsPanel);
   }
 
   // SUGESTÃO - LISTENER PRINCIPAL
