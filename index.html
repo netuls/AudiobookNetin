@@ -19,7 +19,10 @@
           <div class="brand-name">STARK CSAT</div>
         </div>
       </div>
-      <button class="export-btn" id="export-btn">⬇ Exportar Excel</button>
+      <div style="display: flex; gap: 12px;">
+        <button class="export-btn" id="export-btn">⬇ Exportar Excel</button>
+        <button class="suggestion-btn" id="suggestion-btn" title="Sugerir melhoria">💡 Sugestão</button>
+      </div>
     </div>
     <!-- Stats bar -->
     <div class="stats-bar">
@@ -55,6 +58,25 @@
       <div class="modal-btns">
         <button class="modal-btn-cancel" onclick="closeModal()">Cancelar</button>
         <button class="modal-btn-confirm" onclick="confirmDelete()">Confirmar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de sugestão -->
+  <div id="suggestion-modal" class="modal-overlay" style="display:none;">
+    <div class="modal-box">
+      <div class="modal-icon">💡</div>
+      <div class="modal-title">Sugerir Melhoria</div>
+      <div class="modal-sub">Sua sugestão nos ajuda a melhorar!</div>
+      <input class="modal-input" id="suggestion-name" type="text" placeholder="Seu nome" maxlength="50">
+      <textarea class="modal-input suggestion-textarea" id="suggestion-text" placeholder="Descreva sua sugestão..." maxlength="500"></textarea>
+      <div class="char-count">
+        <span id="char-current">0</span>/500
+      </div>
+      <div class="modal-error" id="suggestion-err"></div>
+      <div class="modal-btns">
+        <button class="modal-btn-cancel" onclick="closeSuggestionModal()">Cancelar</button>
+        <button class="modal-btn-confirm" onclick="submitSuggestion()">Enviar Sugestão</button>
       </div>
     </div>
   </div>
