@@ -17,9 +17,8 @@ const app = initializeApp(firebaseConfig);
 const db  = getDatabase(app);
 
 // ── Config ──
-const MEMBERS   = ['Victor', 'Leticia', 'Neto', 'Ygaro', 'Joab'];
-const PASSWORD  = 'cardapinho2026';
-const MAX_ITEMS = 10;
+const MEMBERS  = ['Victor', 'Leticia', 'Neto', 'Ygaro', 'Joab'];
+const PASSWORD = 'cardapinho2026';
 
 let localData    = {};
 MEMBERS.forEach(m => (localData[m] = {}));
@@ -205,7 +204,6 @@ function render() {
   body.innerHTML = visibleMembers.map(m => {
     const allItems = Object.entries(localData[m] || {}).map(([key, val]) => ({ ...val, key }));
     const items    = filterItems(sortItems(allItems));
-    const pct      = Math.min(100, Math.round((allItems.length / MAX_ITEMS) * 100));
 
     if (filterText.trim() !== '' && items.length === 0) return '';
 
@@ -226,9 +224,6 @@ function render() {
         <div class="member-label">
           <div class="member-name">${m.toUpperCase()}</div>
           <div class="member-count">${allItems.length} melhoria${allItems.length !== 1 ? 's' : ''}</div>
-          <div class="progress-bar">
-            <div class="progress-fill" style="width:${pct}%"></div>
-          </div>
         </div>
         <div class="member-content">
           <div class="items-list">${itemsHTML}</div>
