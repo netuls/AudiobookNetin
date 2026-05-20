@@ -184,6 +184,9 @@ function render() {
     const items = filterItems(sortItems(allItems));
     const pct = Math.min(100, Math.round((allItems.length / MAX_ITEMS) * 100));
 
+    // ── Esconde membro se filtro ativo e sem resultados ──
+    if (filterText && items.length === 0) return '';
+
     const itemsHTML = items.length
       ? items.map(it => `
           <div class="citem" id="item-${it.id}">
@@ -194,7 +197,7 @@ function render() {
             <button class="citem-edit" onclick="startEdit('${m}', ${it.id})" title="Editar">✎</button>
             <button class="citem-del"  onclick="remove('${m}', ${it.id})" title="Deletar">×</button>
           </div>`).join('')
-      : `<div class="empty-msg">${filterText ? 'nenhum resultado para "' + filterText + '"' : 'nenhum registro ainda'}</div>`;
+      : `<div class="empty-msg">nenhum registro ainda</div>`;
 
     return `
       <div class="member-row" data-member="${m}">
