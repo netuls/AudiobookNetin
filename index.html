@@ -8,7 +8,6 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
   <div class="root">
     <div class="topbar">
       <div class="brand">
@@ -25,18 +24,30 @@
         <div class="status-text">SISTEMA ATIVO</div>
       </div>
     </div>
-
     <div class="stats-bar">
       <div class="stat">
         <div class="stat-n" id="ct-total">0</div>
         <div class="stat-l">Melhorias Registradas</div>
       </div>
     </div>
-
     <div id="body"></div>
   </div>
 
-  <script src="app.js"></script>
+  <!-- Modal de senha -->
+  <div id="pw-modal" class="modal-overlay" style="display:none;">
+    <div class="modal-box">
+      <div class="modal-icon">🔐</div>
+      <div class="modal-title">Confirmar exclusão</div>
+      <div class="modal-sub">Digite a senha para continuar</div>
+      <input class="modal-input" id="modal-pw" type="password" placeholder="••••••••••••••" autocomplete="off">
+      <div class="modal-error" id="modal-err"></div>
+      <div class="modal-btns">
+        <button class="modal-btn-cancel" onclick="closeModal()">Cancelar</button>
+        <button class="modal-btn-confirm" onclick="confirmDelete()">Confirmar</button>
+      </div>
+    </div>
+  </div>
 
+  <script src="app.js"></script>
 </body>
 </html>
