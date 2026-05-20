@@ -7,6 +7,7 @@
 body {
   font-family: 'Inter', sans-serif;
   background: linear-gradient(135deg, #0f0f1e 0%, #1a0a2e 30%, #16213e 60%, #0f3460 100%);
+  min-height: 100vh;
   height: 100vh;
   display: flex;
   align-items: stretch;
@@ -14,6 +15,7 @@ body {
   padding: 0;
   position: relative;
   overflow-x: hidden;
+  overflow-y: auto;
 }
 
 body::before {
