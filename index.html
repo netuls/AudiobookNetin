@@ -22,6 +22,7 @@
       <div style="display: flex; gap: 12px;">
         <button class="export-btn" id="export-btn">⬇ Exportar Excel</button>
         <button class="suggestion-btn" id="suggestion-btn" title="Sugerir melhoria">💡 Sugestão</button>
+        <button class="view-suggestions-btn" id="view-suggestions-btn" title="Ver sugestões recebidas">📋 Ver Sugestões</button>
       </div>
     </div>
     <!-- Stats bar -->
@@ -86,6 +87,37 @@
     <span id="undo-label"></span>
     <button id="undo-btn">Desfazer</button>
     <button id="undo-close">✕</button>
+  </div>
+
+  <!-- Modal de senha para ver sugestões -->
+  <div id="suggestions-pw-modal" class="modal-overlay" style="display:none;">
+    <div class="modal-box">
+      <div class="modal-icon">🔐</div>
+      <div class="modal-title">Acesso Restrito</div>
+      <div class="modal-sub">Digite a senha para ver as sugestões</div>
+      <input class="modal-input" id="suggestions-pw-input" type="password" placeholder="••••••••••••••" autocomplete="off"
+             onkeydown="if(event.key==='Enter') confirmSuggestionsPassword()">
+      <div class="modal-error" id="suggestions-pw-err"></div>
+      <div class="modal-btns">
+        <button class="modal-btn-cancel" onclick="closeSuggestionsPwModal()">Cancelar</button>
+        <button class="modal-btn-confirm" onclick="confirmSuggestionsPassword()">Confirmar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Painel de Sugestões -->
+  <div id="suggestions-panel" class="modal-overlay" style="display:none;">
+    <div class="modal-box suggestions-panel-box">
+      <div class="modal-icon">📋</div>
+      <div class="modal-title">Sugestões Recebidas</div>
+      <div class="suggestions-panel-meta">
+        <span class="suggestions-panel-count"><span id="suggestions-count">0</span> sugestão(ões)</span>
+      </div>
+      <div id="suggestions-list" class="suggestions-list"></div>
+      <div class="modal-btns" style="margin-top:20px;">
+        <button class="modal-btn-confirm" onclick="closeSuggestionsPanel()">Fechar</button>
+      </div>
+    </div>
   </div>
 
   <!-- SheetJS -->
