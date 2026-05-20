@@ -28,7 +28,7 @@ let pendingDelete  = null;
 let undoTimeout    = null;
 let undoItem       = null;
 let filterText     = '';
-let filterMember   = '';   // ← novo: filtro por membro
+let filterMember   = '';
 let sortMode       = 'newest';
 
 // ── Renderiza imediatamente ──
@@ -258,14 +258,11 @@ window.render        = render;
 // ── Eventos globais ──
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
 
-document.addEventListener('DOMContentLoaded', () => {
-  const pwInput = document.getElementById('modal-pw');
-  if (pwInput) pwInput.addEventListener('keydown', e => { if (e.key === 'Enter') confirmDelete(); });
+const pwInput = document.getElementById('modal-pw');
+if (pwInput) pwInput.addEventListener('keydown', e => { if (e.key === 'Enter') confirmDelete(); });
 
-  document.getElementById('search-input').addEventListener('input', e => applyFilter(e.target.value));
-
-  document.getElementById('member-select').addEventListener('change', e => applyMemberFilter(e.target.value));
-  document.getElementById('export-btn').addEventListener('click', exportExcel);
-  document.getElementById('undo-btn').addEventListener('click', doUndo);
-  document.getElementById('undo-close').addEventListener('click', hideUndo);
-});
+document.getElementById('search-input').addEventListener('input', e => applyFilter(e.target.value));
+document.getElementById('member-select').addEventListener('change', e => applyMemberFilter(e.target.value));
+document.getElementById('export-btn').addEventListener('click', exportExcel);
+document.getElementById('undo-btn').addEventListener('click', doUndo);
+document.getElementById('undo-close').addEventListener('click', hideUndo);
