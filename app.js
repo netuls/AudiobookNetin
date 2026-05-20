@@ -49,29 +49,6 @@ function pushFiltersToURL() {
   history.replaceState(null, '', newURL);
 }
 
-// Lê os filtros da URL antes do primeiro render
-readFiltersFromURL();
-
-// ── Renderiza imediatamente ──
-render();
-
-// Sincroniza os controles visuais com os filtros da URL
-(function syncControls() {
-  const searchInput   = document.getElementById('search-input');
-  const memberSelect  = document.getElementById('member-select');
-  if (searchInput)  searchInput.value  = filterText;
-  if (memberSelect) memberSelect.value = filterMember;
-})();
-
-// ── Escutar Firebase em tempo real ──
-MEMBERS.forEach(member => {
-  const memberRef = ref(db, 'melhorias/' + member);
-  onValue(memberRef, snapshot => {
-    localData[member] = snapshot.val() || {};
-    render();
-  });
-});
-
 // ── Utilitários ──
 function formatDate(ts) {
   const d = new Date(ts);
@@ -281,14 +258,12 @@ function openSuggestionModal() {
   const modal = document.getElementById('suggestion-modal');
   if (modal) {
     modal.style.display = 'flex';
-    console.log('✅ Modal aberto com sucesso!');
+    console.log('✅ Modal aberto!');
     document.getElementById('suggestion-name').value = '';
     document.getElementById('suggestion-text').value = '';
     document.getElementById('char-current').textContent = '0';
     document.getElementById('suggestion-err').textContent = '';
     setTimeout(() => document.getElementById('suggestion-name').focus(), 50);
-  } else {
-    console.error('❌ Modal de sugestão não encontrado no DOM');
   }
 }
 
@@ -435,10 +410,40 @@ window.render                 = render;
 window.openSuggestionModal    = openSuggestionModal;
 window.closeSuggestionModal   = closeSuggestionModal;
 window.submitSuggestion       = submitSuggestion;
+window.doUndo                 = doUndo;
+window.hideUndo               = hideUndo;
+window.applyFilter            = applyFilter;
+window.applySort              = applySort;
+window.applyMemberFilter      = applyMemberFilter;
+window.exportExcel            = exportExcel;
 
-// ── Esperar DOM estar pronto ──
-function setupEventListeners() {
-  console.log('Configurando event listeners...');
+// ── Inicialização completa ──
+function initializeApp() {
+  console.log('🚀 Iniciando app...');
+
+  // Ler filtros da URL
+  readFiltersFromURL();
+
+  // Sincronizar controles
+  const searchInput   = document.getElementById('search-input');
+  const memberSelect  = document.getElementById('member-select');
+  if (searchInput)  searchInput.value  = filterText;
+  if (memberSelect) memberSelect.value = filterMember;
+
+  // Renderizar
+  render();
+
+  // Escutar Firebase em tempo real
+  MEMBERS.forEach(member => {
+    const memberRef = ref(db, 'melhorias/' + member);
+    onValue(memberRef, snapshot => {
+      localData[member] = snapshot.val() || {};
+      render();
+    });
+  });
+
+  // Configurar listeners
+  console.log('📌 Configurando listeners...');
 
   // Escape para fechar modais
   document.addEventListener('keydown', e => { 
@@ -457,13 +462,11 @@ function setupEventListeners() {
   }
 
   // Busca
-  const searchInput = document.getElementById('search-input');
   if (searchInput) {
     searchInput.addEventListener('input', e => applyFilter(e.target.value));
   }
 
   // Filtro de membro
-  const memberSelect = document.getElementById('member-select');
   if (memberSelect) {
     memberSelect.addEventListener('change', e => applyMemberFilter(e.target.value));
   }
@@ -474,13 +477,11 @@ function setupEventListeners() {
     exportBtn.addEventListener('click', exportExcel);
   }
 
-  // SUGESTÃO - LISTENER PRINCIPAL
+  // ✅ BOTÃO DE SUGESTÃO - LISTENER PRINCIPAL
   const suggestionBtn = document.getElementById('suggestion-btn');
   if (suggestionBtn) {
     suggestionBtn.addEventListener('click', openSuggestionModal);
-    console.log('✅ Listener de sugestão adicionado com sucesso!');
-  } else {
-    console.warn('❌ Botão de sugestão não encontrado');
+    console.log('✅ Listener de sugestão adicionado!');
   }
 
   // Contador de caracteres
@@ -508,24 +509,22 @@ function setupEventListeners() {
     });
   }
 
-  console.log('✅ Todos os listeners configurados!');
+  // Suporte ao botão Voltar/Avançar
+  window.addEventListener('popstate', () => {
+    readFiltersFromURL();
+    const searchInput  = document.getElementById('search-input');
+    const memberSelect = document.getElementById('member-select');
+    if (searchInput)  searchInput.value  = filterText;
+    if (memberSelect) memberSelect.value = filterMember;
+    render();
+  });
+
+  console.log('✅ App pronto! Todos os listeners configurados!');
 }
 
-// Chamar quando DOM estiver pronto
+// Esperar DOM estar 100% pronto
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', setupEventListeners);
+  document.addEventListener('DOMContentLoaded', initializeApp);
 } else {
-  setupEventListeners();
+  initializeApp();
 }
-
-// Suporte ao botão Voltar/Avançar
-window.addEventListener('popstate', () => {
-  readFiltersFromURL();
-  const searchInput  = document.getElementById('search-input');
-  const memberSelect = document.getElementById('member-select');
-  if (searchInput)  searchInput.value  = filterText;
-  if (memberSelect) memberSelect.value = filterMember;
-  render();
-});
-
-console.log('✅ App.js carregado completamente!');
