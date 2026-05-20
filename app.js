@@ -30,8 +30,40 @@ let filterText     = '';
 let filterMember   = '';
 let sortMode       = 'newest';
 
+// ── [NOVO] Sincronizar filtros com a URL ──
+function readFiltersFromURL() {
+  const params = new URLSearchParams(window.location.search);
+  filterText   = params.get('q')      || '';
+  filterMember = params.get('member') || '';
+  sortMode     = params.get('sort')   || 'newest';
+}
+
+function pushFiltersToURL() {
+  const params = new URLSearchParams();
+  if (filterText)             params.set('q',      filterText);
+  if (filterMember)           params.set('member', filterMember);
+  if (sortMode !== 'newest')  params.set('sort',   sortMode);
+  const newURL = params.toString()
+    ? `${location.pathname}?${params.toString()}`
+    : location.pathname;
+  history.replaceState(null, '', newURL);
+}
+
+// Lê os filtros da URL antes do primeiro render
+readFiltersFromURL();
+
 // ── Renderiza imediatamente ──
 render();
+
+// Sincroniza os controles visuais com os filtros da URL
+(function syncControls() {
+  const searchInput   = document.getElementById('search-input');
+  const memberSelect  = document.getElementById('member-select');
+  const sortSelect    = document.getElementById('sort-select'); // ajuste o id se diferente
+  if (searchInput)  searchInput.value  = filterText;
+  if (memberSelect) memberSelect.value = filterMember;
+  if (sortSelect)   sortSelect.value   = sortMode;
+})();
 
 // ── Escutar Firebase em tempo real ──
 MEMBERS.forEach(member => {
@@ -61,15 +93,50 @@ function filterItems(items) {
   return items.filter(i => i.name.toLowerCase().includes(filterText.toLowerCase()));
 }
 
+// ── [NOVO] Notificação de erro inline ──
+function showError(message) {
+  // Remove qualquer toast de erro existente
+  const existing = document.getElementById('error-toast');
+  if (existing) existing.remove();
+
+  const toast = document.createElement('div');
+  toast.id = 'error-toast';
+  toast.setAttribute('role', 'alert');
+  toast.innerHTML = `
+    <span>⚠️ ${message}</span>
+    <button onclick="this.parentElement.remove()" aria-label="Fechar">×</button>
+  `;
+  document.body.appendChild(toast);
+
+  // Auto-remove após 6 segundos
+  setTimeout(() => toast && toast.remove(), 6000);
+}
+
 // ── Adicionar ──
 function add(member) {
   const inp = document.getElementById('i-' + member);
   const val = inp.value.trim();
   if (!val) return;
+
+  const btn = inp.nextElementSibling; // botão +
+  inp.disabled = true;
+  if (btn) btn.disabled = true;
+
   const memberRef = ref(db, 'melhorias/' + member);
-  push(memberRef, { name: val, ts: Date.now() });
-  inp.value = '';
-  flashSuccess(member);
+  push(memberRef, { name: val, ts: Date.now() })
+    .then(() => {
+      inp.value = '';
+      flashSuccess(member);
+    })
+    .catch(err => {
+      console.error('Erro ao adicionar:', err);
+      showError('Não foi possível adicionar. Verifique sua conexão.');
+    })
+    .finally(() => {
+      inp.disabled = false;
+      if (btn) btn.disabled = false;
+      inp.focus();
+    });
 }
 
 function flashSuccess(member) {
@@ -105,8 +172,24 @@ function saveEdit(member, firebaseKey) {
   if (!inp) return;
   const val = inp.value.trim();
   if (!val) return;
+
+  // Desabilita controles durante o save
+  inp.disabled = true;
+  const saveBtn   = inp.nextElementSibling;
+  const cancelBtn = saveBtn ? saveBtn.nextElementSibling : null;
+  if (saveBtn)   saveBtn.disabled   = true;
+  if (cancelBtn) cancelBtn.disabled = true;
+
   const itemRef = ref(db, `melhorias/${member}/${firebaseKey}`);
-  update(itemRef, { name: val });
+  update(itemRef, { name: val })
+    .catch(err => {
+      console.error('Erro ao editar:', err);
+      showError('Não foi possível salvar a edição. Verifique sua conexão.');
+      // Reabilita para nova tentativa
+      if (inp)       inp.disabled       = false;
+      if (saveBtn)   saveBtn.disabled   = false;
+      if (cancelBtn) cancelBtn.disabled = false;
+    });
 }
 
 // ── Deletar ──
@@ -128,19 +211,30 @@ function confirmDelete() {
   const pw  = document.getElementById('modal-pw').value;
   const inp = document.getElementById('modal-pw');
   const err = document.getElementById('modal-err');
-  if (pw === PASSWORD) {
-    const { member, firebaseKey } = pendingDelete;
-    const item = localData[member][firebaseKey];
-    const itemRef = ref(db, `melhorias/${member}/${firebaseKey}`);
-    remove(itemRef);
-    closeModal();
-    showUndo(member, item);
-  } else {
+
+  if (pw !== PASSWORD) {
     inp.classList.add('error');
     err.textContent = 'Senha incorreta. Tente novamente.';
     inp.value = '';
     setTimeout(() => inp.classList.remove('error'), 400);
+    return;
   }
+
+  const { member, firebaseKey } = pendingDelete;
+  const item    = localData[member][firebaseKey];
+  const itemRef = ref(db, `melhorias/${member}/${firebaseKey}`);
+
+  // Fecha o modal imediatamente para boa UX
+  closeModal();
+
+  remove(itemRef)
+    .then(() => {
+      showUndo(member, item);
+    })
+    .catch(err => {
+      console.error('Erro ao deletar:', err);
+      showError('Não foi possível deletar. Verifique sua conexão.');
+    });
 }
 
 // ── Desfazer exclusão ──
@@ -162,14 +256,32 @@ function doUndo() {
   if (!undoItem) return;
   const { member, item } = undoItem;
   const memberRef = ref(db, 'melhorias/' + member);
-  push(memberRef, item);
+  push(memberRef, item)
+    .catch(err => {
+      console.error('Erro ao desfazer:', err);
+      showError('Não foi possível desfazer. Verifique sua conexão.');
+    });
   hideUndo();
 }
 
-// ── Filtros ──
-function applyFilter(val)       { filterText   = val; render(); }
-function applySort(val)         { sortMode     = val; render(); }
-function applyMemberFilter(val) { filterMember = val; render(); }
+// ── Filtros (agora sincronizam com a URL) ──
+function applyFilter(val) {
+  filterText = val;
+  pushFiltersToURL();
+  render();
+}
+
+function applySort(val) {
+  sortMode = val;
+  pushFiltersToURL();
+  render();
+}
+
+function applyMemberFilter(val) {
+  filterMember = val;
+  pushFiltersToURL();
+  render();
+}
 
 // ── Exportar Excel ──
 function exportExcel() {
@@ -196,7 +308,6 @@ function render() {
   const body = document.getElementById('body');
   if (!body) return;
 
-  // Quais membros mostrar
   const visibleMembers = filterMember
     ? MEMBERS.filter(m => m.toLowerCase() === filterMember.toLowerCase())
     : MEMBERS;
@@ -207,6 +318,7 @@ function render() {
 
     if (filterText.trim() !== '' && items.length === 0) return '';
 
+    // [NOVO] Botões com aria-label e classe touch-friendly
     const itemsHTML = items.length
       ? items.map(it => `
           <div class="citem" id="item-${it.key}">
@@ -214,8 +326,8 @@ function render() {
               <span class="citem-name">${it.name}</span>
               <span class="citem-date">${formatDate(it.ts)}</span>
             </div>
-            <button class="citem-edit" onclick="startEdit('${m}', '${it.key}')" title="Editar">✎</button>
-            <button class="citem-del"  onclick="removeItem('${m}', '${it.key}')" title="Deletar">×</button>
+            <button class="citem-edit icon-btn" onclick="startEdit('${m}', '${it.key}')" title="Editar" aria-label="Editar melhoria">✎</button>
+            <button class="citem-del icon-btn"  onclick="removeItem('${m}', '${it.key}')" title="Deletar" aria-label="Deletar melhoria">×</button>
           </div>`).join('')
       : `<div class="empty-msg">nenhum registro ainda</div>`;
 
@@ -256,8 +368,21 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal()
 const pwInput = document.getElementById('modal-pw');
 if (pwInput) pwInput.addEventListener('keydown', e => { if (e.key === 'Enter') confirmDelete(); });
 
-document.getElementById('search-input').addEventListener('input', e => applyFilter(e.target.value));
+document.getElementById('search-input').addEventListener('input',  e => applyFilter(e.target.value));
 document.getElementById('member-select').addEventListener('change', e => applyMemberFilter(e.target.value));
 document.getElementById('export-btn').addEventListener('click', exportExcel);
 document.getElementById('undo-btn').addEventListener('click', doUndo);
 document.getElementById('undo-close').addEventListener('click', hideUndo);
+
+// Suporte ao botão Voltar/Avançar do navegador
+window.addEventListener('popstate', () => {
+  readFiltersFromURL();
+  // Sincroniza controles visuais
+  const searchInput  = document.getElementById('search-input');
+  const memberSelect = document.getElementById('member-select');
+  const sortSelect   = document.getElementById('sort-select');
+  if (searchInput)  searchInput.value  = filterText;
+  if (memberSelect) memberSelect.value = filterMember;
+  if (sortSelect)   sortSelect.value   = sortMode;
+  render();
+});
