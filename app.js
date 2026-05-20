@@ -21,17 +21,17 @@ const MEMBERS   = ['Victor', 'Leticia', 'Neto', 'Ygaro', 'Joab'];
 const PASSWORD  = 'cardapinho2026';
 const MAX_ITEMS = 10;
 
-// Começa já com arrays vazios para cada membro
-let localData = {};
+let localData    = {};
 MEMBERS.forEach(m => (localData[m] = {}));
 
-let pendingDelete = null;
-let undoTimeout   = null;
-let undoItem      = null;
-let filterText    = '';
-let sortMode      = 'newest';
+let pendingDelete  = null;
+let undoTimeout    = null;
+let undoItem       = null;
+let filterText     = '';
+let filterMember   = '';   // ← novo: filtro por membro
+let sortMode       = 'newest';
 
-// ── Renderiza imediatamente com banco vazio ──
+// ── Renderiza imediatamente ──
 render();
 
 // ── Escutar Firebase em tempo real ──
@@ -167,9 +167,10 @@ function doUndo() {
   hideUndo();
 }
 
-// ── Filtro e ordenação ──
-function applyFilter(val) { filterText = val; render(); }
-function applySort(val)   { sortMode = val;   render(); }
+// ── Filtros ──
+function applyFilter(val)       { filterText   = val; render(); }
+function applySort(val)         { sortMode     = val; render(); }
+function applyMemberFilter(val) { filterMember = val; render(); }
 
 // ── Exportar Excel ──
 function exportExcel() {
@@ -196,7 +197,12 @@ function render() {
   const body = document.getElementById('body');
   if (!body) return;
 
-  body.innerHTML = MEMBERS.map(m => {
+  // Quais membros mostrar
+  const visibleMembers = filterMember
+    ? MEMBERS.filter(m => m.toLowerCase() === filterMember.toLowerCase())
+    : MEMBERS;
+
+  body.innerHTML = visibleMembers.map(m => {
     const allItems = Object.entries(localData[m] || {}).map(([key, val]) => ({ ...val, key }));
     const items    = filterItems(sortItems(allItems));
     const pct      = Math.min(100, Math.round((allItems.length / MAX_ITEMS) * 100));
@@ -257,7 +263,8 @@ document.addEventListener('DOMContentLoaded', () => {
   if (pwInput) pwInput.addEventListener('keydown', e => { if (e.key === 'Enter') confirmDelete(); });
 
   document.getElementById('search-input').addEventListener('input', e => applyFilter(e.target.value));
-  document.getElementById('sort-select').addEventListener('change', e => applySort(e.target.value));
+
+  document.getElementById('member-select').addEventListener('change', e => applyMemberFilter(e.target.value));
   document.getElementById('export-btn').addEventListener('click', exportExcel);
   document.getElementById('undo-btn').addEventListener('click', doUndo);
   document.getElementById('undo-close').addEventListener('click', hideUndo);
