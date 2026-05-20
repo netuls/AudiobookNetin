@@ -184,8 +184,8 @@ function render() {
     const items = filterItems(sortItems(allItems));
     const pct = Math.min(100, Math.round((allItems.length / MAX_ITEMS) * 100));
 
-    // ── Esconde membro se filtro ativo e sem resultados ──
-    if (filterText && items.length === 0) return '';
+    // ── Se filtro ativo e nenhum item bate, oculta o membro inteiro ──
+    if (filterText.trim() !== '' && items.length === 0) return '';
 
     const itemsHTML = items.length
       ? items.map(it => `
