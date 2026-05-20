@@ -31,10 +31,13 @@
     <!-- Toolbar -->
     <div class="toolbar">
       <input class="search-input" id="search-input" type="text" placeholder="🔍  Buscar melhoria...">
-      <select class="sort-select" id="sort-select">
-        <option value="newest">Mais recentes</option>
-        <option value="oldest">Mais antigas</option>
-        <option value="alpha">Alfabética</option>
+      <select class="sort-select" id="member-select">
+        <option value="">👤 Todos os membros</option>
+        <option value="Victor">Victor</option>
+        <option value="Leticia">Leticia</option>
+        <option value="Neto">Neto</option>
+        <option value="Ygaro">Ygaro</option>
+        <option value="Joab">Joab</option>
       </select>
     </div>
     <!-- Conteúdo -->
@@ -65,7 +68,6 @@
 
   <!-- SheetJS -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-  <!-- App com Firebase (type=module obrigatório) -->
   <script type="module" src="app.js"></script>
 </body>
 </html>
