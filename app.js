@@ -1,6 +1,6 @@
 // ── Firebase ──
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getDatabase, ref, onValue, push, update, remove, get } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+import { getDatabase, ref, onValue, push, update, remove } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyC-pWCZqu_wqghj65pix_kOIh_BkuNaOOM",
@@ -21,7 +21,8 @@ const MEMBERS   = ['Victor', 'Leticia', 'Neto', 'Ygaro', 'Joab'];
 const PASSWORD  = 'cardapinho2026';
 const MAX_ITEMS = 10;
 
-let localData   = {};   // espelho local dos dados do Firebase
+// Começa já com arrays vazios para cada membro
+let localData = {};
 MEMBERS.forEach(m => (localData[m] = {}));
 
 let pendingDelete = null;
@@ -29,6 +30,18 @@ let undoTimeout   = null;
 let undoItem      = null;
 let filterText    = '';
 let sortMode      = 'newest';
+
+// ── Renderiza imediatamente com banco vazio ──
+render();
+
+// ── Escutar Firebase em tempo real ──
+MEMBERS.forEach(member => {
+  const memberRef = ref(db, 'melhorias/' + member);
+  onValue(memberRef, snapshot => {
+    localData[member] = snapshot.val() || {};
+    render();
+  });
+});
 
 // ── Utilitários ──
 function formatDate(ts) {
@@ -48,15 +61,6 @@ function filterItems(items) {
   if (!filterText) return items;
   return items.filter(i => i.name.toLowerCase().includes(filterText.toLowerCase()));
 }
-
-// ── Escutar Firebase em tempo real ──
-MEMBERS.forEach(member => {
-  const memberRef = ref(db, 'melhorias/' + member);
-  onValue(memberRef, snapshot => {
-    localData[member] = snapshot.val() || {};
-    render();
-  });
-});
 
 // ── Adicionar ──
 function add(member) {
@@ -131,7 +135,7 @@ function confirmDelete() {
     const itemRef = ref(db, `melhorias/${member}/${firebaseKey}`);
     remove(itemRef);
     closeModal();
-    showUndo(member, firebaseKey, item);
+    showUndo(member, item);
   } else {
     inp.classList.add('error');
     err.textContent = 'Senha incorreta. Tente novamente.';
@@ -141,7 +145,7 @@ function confirmDelete() {
 }
 
 // ── Desfazer exclusão ──
-function showUndo(member, firebaseKey, item) {
+function showUndo(member, item) {
   if (undoTimeout) clearTimeout(undoTimeout);
   undoItem = { member, item };
   const toast = document.getElementById('undo-toast');
@@ -185,9 +189,14 @@ function exportExcel() {
 function render() {
   let total = 0;
   MEMBERS.forEach(m => { total += Object.keys(localData[m] || {}).length; });
-  document.getElementById('ct-total').textContent = total;
 
-  document.getElementById('body').innerHTML = MEMBERS.map(m => {
+  const ctTotal = document.getElementById('ct-total');
+  if (ctTotal) ctTotal.textContent = total;
+
+  const body = document.getElementById('body');
+  if (!body) return;
+
+  body.innerHTML = MEMBERS.map(m => {
     const allItems = Object.entries(localData[m] || {}).map(([key, val]) => ({ ...val, key }));
     const items    = filterItems(sortItems(allItems));
     const pct      = Math.min(100, Math.round((allItems.length / MAX_ITEMS) * 100));
@@ -231,13 +240,14 @@ function render() {
   }).join('');
 }
 
-// ── Expor funções globais (necessário com ES modules) ──
-window.add         = add;
-window.startEdit   = startEdit;
-window.saveEdit    = saveEdit;
-window.removeItem  = removeItem;
-window.closeModal  = closeModal;
+// ── Expor funções globais ──
+window.add           = add;
+window.startEdit     = startEdit;
+window.saveEdit      = saveEdit;
+window.removeItem    = removeItem;
+window.closeModal    = closeModal;
 window.confirmDelete = confirmDelete;
+window.render        = render;
 
 // ── Eventos globais ──
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
