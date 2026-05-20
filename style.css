@@ -7,11 +7,11 @@
 body {
   font-family: 'Inter', sans-serif;
   background: linear-gradient(135deg, #0a0015 0%, #1a0033 50%, #0f001a 100%);
-  min-height: 100vh;
+  height: 100vh;
   display: flex;
-  align-items: flex-start;
+  align-items: stretch;
   justify-content: center;
-  padding: 40px 16px;
+  padding: 0;
   position: relative;
   overflow-x: hidden;
 }
@@ -31,25 +31,21 @@ body::before {
 /* ── Container ── */
 .root {
   width: 100%;
-  max-width: 900px;
+  height: 100%;
   background: rgba(15, 10, 30, 0.7);
   backdrop-filter: blur(20px);
-  border-radius: 24px;
+  border-radius: 0;
   overflow: hidden;
-  border: 2px solid rgba(168, 85, 247, 0.3);
-  box-shadow: 
-    0 0 60px rgba(168, 85, 247, 0.2),
-    0 0 120px rgba(168, 85, 247, 0.1),
-    inset 0 0 60px rgba(168, 85, 247, 0.05);
+  border: none;
+  display: flex;
+  flex-direction: column;
+  box-shadow: none;
   transition: all 0.3s ease;
 }
 
 .root:hover {
-  border-color: rgba(168, 85, 247, 0.5);
-  box-shadow: 
-    0 0 80px rgba(168, 85, 247, 0.3),
-    0 0 160px rgba(168, 85, 247, 0.15),
-    inset 0 0 60px rgba(168, 85, 247, 0.1);
+  border-color: transparent;
+  box-shadow: none;
 }
 
 /* ── Top bar ── */
@@ -57,9 +53,10 @@ body::before {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 28px 32px;
+  padding: 24px 32px;
   background: linear-gradient(90deg, rgba(88, 28, 135, 0.2) 0%, rgba(168, 85, 247, 0.1) 50%, rgba(139, 92, 246, 0.05) 100%);
   border-bottom: 2px solid rgba(168, 85, 247, 0.2);
+  flex-shrink: 0;
 }
 
 .brand {
@@ -161,6 +158,7 @@ body::before {
   padding: 24px;
   background: linear-gradient(180deg, rgba(88, 28, 135, 0.1) 0%, transparent 100%);
   border-bottom: 2px solid rgba(168, 85, 247, 0.15);
+  flex-shrink: 0;
 }
 
 .stat {
@@ -198,12 +196,20 @@ body::before {
   font-weight: 500;
 }
 
+/* ── Members container ── */
+#body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
 /* ── Member rows ── */
 .member-row {
   display: grid;
-  grid-template-columns: 180px 1fr;
+  grid-template-columns: 200px 1fr;
   border-bottom: 1px solid rgba(168, 85, 247, 0.1);
-  min-height: 80px;
+  min-height: 100px;
   transition: all 0.3s ease;
 }
 
@@ -225,7 +231,7 @@ body::before {
 
 .member-name {
   font-family: 'Orbitron', monospace;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 700;
   letter-spacing: 2.5px;
   color: #c4b5fd;
@@ -233,7 +239,7 @@ body::before {
 }
 
 .member-count {
-  font-size: 11px;
+  font-size: 12px;
   color: rgba(196, 181, 253, 0.5);
   letter-spacing: 0.5px;
   font-weight: 500;
@@ -245,6 +251,7 @@ body::before {
   flex-direction: column;
   gap: 10px;
   justify-content: center;
+  overflow-y: auto;
 }
 
 /* ── Items ── */
@@ -252,6 +259,8 @@ body::before {
   display: flex;
   flex-direction: column;
   gap: 6px;
+  max-height: 60px;
+  overflow-y: auto;
 }
 
 .citem {
@@ -368,6 +377,20 @@ body::before {
 }
 
 /* ── Responsive ── */
+@media (max-width: 900px) {
+  .member-row {
+    grid-template-columns: 150px 1fr;
+  }
+
+  .member-label {
+    padding: 16px 18px;
+  }
+
+  .member-name {
+    font-size: 12px;
+  }
+}
+
 @media (max-width: 560px) {
   .member-row { 
     grid-template-columns: 1fr;
@@ -387,16 +410,13 @@ body::before {
     flex-direction: column;
     gap: 14px;
     align-items: flex-start;
+    padding: 16px;
   }
 
   .stats-bar {
     justify-content: center;
     gap: 10px;
     padding: 16px;
-  }
-
-  .root {
-    border-radius: 16px;
   }
 }
 
