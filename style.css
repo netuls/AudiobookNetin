@@ -1,3 +1,246 @@
+/* ══════════════════════════════════════
+   INTRO SCREEN
+══════════════════════════════════════ */
+
+#intro-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: #080818;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+/* Linhas de grade ao fundo */
+#intro-bg-lines {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(139, 92, 246, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(139, 92, 246, 0.06) 1px, transparent 1px);
+  background-size: 60px 60px;
+  animation: intro-grid-in 1.2s ease forwards;
+  opacity: 0;
+}
+
+@keyframes intro-grid-in {
+  to { opacity: 1; }
+}
+
+/* Partículas flutuantes */
+#intro-particles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+#intro-particles::before,
+#intro-particles::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  animation: intro-float 6s ease-in-out infinite;
+}
+
+#intro-particles::before {
+  width: 500px;
+  height: 500px;
+  top: -150px;
+  right: -150px;
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.18) 0%, transparent 70%);
+  animation-delay: 0s;
+}
+
+#intro-particles::after {
+  width: 400px;
+  height: 400px;
+  bottom: -100px;
+  left: -100px;
+  background: radial-gradient(circle, rgba(88, 28, 135, 0.2) 0%, transparent 70%);
+  animation-delay: 3s;
+}
+
+@keyframes intro-float {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50%       { transform: translate(30px, -30px) scale(1.05); }
+}
+
+/* Conteúdo central */
+#intro-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  position: relative;
+  z-index: 2;
+}
+
+/* Logo wrapper */
+#intro-logo-wrap {
+  position: relative;
+  width: 130px;
+  height: 130px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  animation: intro-logo-appear 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) 0.4s forwards;
+}
+
+@keyframes intro-logo-appear {
+  0%   { opacity: 0; transform: scale(0.4) rotate(-15deg); filter: blur(10px); }
+  100% { opacity: 1; transform: scale(1) rotate(0deg);    filter: blur(0px); }
+}
+
+/* Anéis giratórios */
+#intro-logo-ring {
+  position: absolute;
+  inset: -8px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  border-top-color: rgba(168, 85, 247, 0.9);
+  border-right-color: rgba(168, 85, 247, 0.3);
+  animation: intro-spin 1.8s linear infinite;
+  opacity: 0;
+  animation-delay: 0.6s;
+  animation-fill-mode: forwards;
+}
+
+#intro-logo-ring2 {
+  position: absolute;
+  inset: -16px;
+  border-radius: 50%;
+  border: 1.5px solid transparent;
+  border-bottom-color: rgba(139, 92, 246, 0.6);
+  border-left-color: rgba(139, 92, 246, 0.2);
+  animation: intro-spin-reverse 2.8s linear infinite;
+  opacity: 0;
+  animation-delay: 0.8s;
+  animation-fill-mode: forwards;
+}
+
+@keyframes intro-spin         { to { transform: rotate(360deg);  opacity: 1; } }
+@keyframes intro-spin-reverse { to { transform: rotate(-360deg); opacity: 1; } }
+
+/* Imagem da logo */
+#intro-logo-img {
+  width: 100px;
+  height: 100px;
+  border-radius: 24px;
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.35) 0%, rgba(88, 28, 135, 0.25) 100%);
+  border: 2px solid rgba(168, 85, 247, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  box-shadow: 0 0 60px rgba(139, 92, 246, 0.5),
+              0 0 120px rgba(88, 28, 135, 0.3),
+              inset 0 0 30px rgba(168, 85, 247, 0.15);
+  font-size: 48px;
+}
+
+#intro-logo-img img {
+  width: 80px;
+  height: 80px;
+  object-fit: contain;
+}
+
+/* Nome da marca */
+#intro-brand {
+  font-family: 'Orbitron', monospace;
+  font-size: 32px;
+  font-weight: 900;
+  letter-spacing: 8px;
+  background: linear-gradient(90deg, #7c3aed, #a78bfa, #c4b5fd, #a78bfa, #7c3aed);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: intro-brand-appear 0.7s ease 1.0s both,
+             intro-shimmer 3s linear 1.7s infinite;
+  opacity: 0;
+  filter: drop-shadow(0 0 20px rgba(139, 92, 246, 0.5));
+}
+
+@keyframes intro-brand-appear {
+  0%   { opacity: 0; transform: translateY(16px) scale(0.95); letter-spacing: 16px; }
+  100% { opacity: 1; transform: translateY(0)    scale(1);    letter-spacing: 8px;  }
+}
+
+@keyframes intro-shimmer {
+  to { background-position: 200% center; }
+}
+
+/* Tagline */
+#intro-tagline {
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: 5px;
+  color: rgba(196, 181, 253, 0.55);
+  text-transform: uppercase;
+  opacity: 0;
+  animation: intro-fade-up 0.6s ease 1.4s both;
+}
+
+@keyframes intro-fade-up {
+  0%   { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* Barra de progresso */
+#intro-bar-wrap {
+  width: 220px;
+  height: 2px;
+  background: rgba(139, 92, 246, 0.15);
+  border-radius: 2px;
+  overflow: hidden;
+  opacity: 0;
+  animation: intro-fade-up 0.5s ease 1.7s both;
+}
+
+#intro-bar {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #7c3aed, #a78bfa, #c4b5fd);
+  border-radius: 2px;
+  box-shadow: 0 0 12px rgba(168, 85, 247, 0.8);
+  transition: width 0.1s linear;
+}
+
+/* Status */
+#intro-status {
+  font-family: 'Orbitron', monospace;
+  font-size: 10px;
+  letter-spacing: 3px;
+  color: rgba(139, 92, 246, 0.6);
+  text-transform: uppercase;
+  opacity: 0;
+  animation: intro-fade-up 0.5s ease 1.9s both;
+}
+
+/* Saída da intro */
+#intro-screen.intro-exit {
+  animation: intro-screen-out 0.8s cubic-bezier(0.76, 0, 0.24, 1) forwards;
+}
+
+@keyframes intro-screen-out {
+  0%   { opacity: 1; transform: scale(1);    filter: blur(0px); }
+  40%  { opacity: 1; transform: scale(1.04); filter: blur(0px); }
+  100% { opacity: 0; transform: scale(1.08); filter: blur(8px); pointer-events: none; }
+}
+
+/* Entrada do site */
+#main-root {
+  transition: opacity 0.6s ease;
+}
+
+#main-root.site-enter {
+  opacity: 1 !important;
+}
+
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
