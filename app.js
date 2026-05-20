@@ -23,6 +23,9 @@ const PASSWORD = 'cardapinho2026';
 let localData    = {};
 MEMBERS.forEach(m => (localData[m] = {}));
 
+// Controla quais membros já tiveram dados carregados do Firebase
+const loadedMembers = new Set();
+
 let pendingDelete  = null;
 let undoTimeout    = null;
 let undoItem       = null;
@@ -68,6 +71,7 @@ MEMBERS.forEach(member => {
   const memberRef = ref(db, 'melhorias/' + member);
   onValue(memberRef, snapshot => {
     localData[member] = snapshot.val() || {};
+    loadedMembers.add(member);
     render();
   });
 });
@@ -487,23 +491,30 @@ function render() {
 
     if (filterText.trim() !== '' && items.length === 0) return '';
 
-    const itemsHTML = items.length
-      ? items.map((it, idx) => `
-          <div class="citem item-enter" id="item-${it.key}" style="animation-delay: ${idx * 60}ms">
-            <div class="citem-body">
-              <span class="citem-name">${it.name}</span>
-              <span class="citem-date">${formatDate(it.ts)}</span>
-            </div>
-            <button class="citem-edit icon-btn" onclick="startEdit('${m}', '${it.key}')" title="Editar" aria-label="Editar melhoria">✎</button>
-            <button class="citem-del icon-btn"  onclick="removeItem('${m}', '${it.key}')" title="Deletar" aria-label="Deletar melhoria">×</button>
-          </div>`).join('')
-      : `<div class="empty-msg">nenhum registro ainda</div>`;
+    const skeletonHTML = `
+        <div class="skeleton-item"><div class="skeleton-line long"></div><div class="skeleton-line short"></div></div>
+        <div class="skeleton-item"><div class="skeleton-line medium"></div><div class="skeleton-line short"></div></div>
+        <div class="skeleton-item"><div class="skeleton-line long"></div><div class="skeleton-line short"></div></div>`;
+
+    const itemsHTML = !loadedMembers.has(m)
+      ? skeletonHTML
+      : items.length
+        ? items.map((it, idx) => `
+            <div class="citem item-enter" id="item-${it.key}" style="animation-delay: ${idx * 60}ms">
+              <div class="citem-body">
+                <span class="citem-name">${it.name}</span>
+                <span class="citem-date">${formatDate(it.ts)}</span>
+              </div>
+              <button class="citem-edit icon-btn" onclick="startEdit('${m}', '${it.key}')" title="Editar" aria-label="Editar melhoria">✎</button>
+              <button class="citem-del icon-btn"  onclick="removeItem('${m}', '${it.key}')" title="Deletar" aria-label="Deletar melhoria">×</button>
+            </div>`).join('')
+        : `<div class="empty-msg">nenhum registro ainda</div>`;
 
     return `
       <div class="member-row" data-member="${m}">
         <div class="member-label">
           <div class="member-name">${m.toUpperCase()}</div>
-          <div class="member-count">${allItems.length} melhoria${allItems.length !== 1 ? 's' : ''}</div>
+          <div class="member-count">${!loadedMembers.has(m) ? '<span class="skeleton-count"></span>' : allItems.length + ' melhoria' + (allItems.length !== 1 ? 's' : '')}</div>
         </div>
         <div class="member-content">
           <div class="items-list">${itemsHTML}</div>
