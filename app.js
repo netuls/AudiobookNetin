@@ -488,8 +488,8 @@ function render() {
     if (filterText.trim() !== '' && items.length === 0) return '';
 
     const itemsHTML = items.length
-      ? items.map(it => `
-          <div class="citem" id="item-${it.key}">
+      ? items.map((it, idx) => `
+          <div class="citem item-enter" id="item-${it.key}" style="animation-delay: ${idx * 60}ms">
             <div class="citem-body">
               <span class="citem-name">${it.name}</span>
               <span class="citem-date">${formatDate(it.ts)}</span>
