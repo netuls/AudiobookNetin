@@ -181,6 +181,48 @@ body::before {
   left: 100%;
 }
 
+/* ── Botão de Sugestão ── */
+.suggestion-btn {
+  font-family: 'Orbitron', monospace;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.3) 0%, rgba(139, 92, 246, 0.2) 100%);
+  border: 1.5px solid rgba(168, 85, 247, 0.5);
+  border-radius: 12px;
+  color: #a78bfa;
+  cursor: pointer;
+  padding: 12px 18px;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 4px 16px rgba(139, 92, 246, 0.15),
+              inset 0 1px 0 rgba(168, 85, 247, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.suggestion-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  transition: left 0.5s;
+}
+
+.suggestion-btn:hover {
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.5) 0%, rgba(139, 92, 246, 0.35) 100%);
+  border-color: rgba(168, 85, 247, 0.8);
+  box-shadow: 0 8px 32px rgba(139, 92, 246, 0.3),
+              inset 0 0 10px rgba(168, 85, 247, 0.2);
+  transform: translateY(-3px);
+}
+
+.suggestion-btn:hover::before {
+  left: 100%;
+}
+
 /* ── Stats bar ── */
 .stats-bar {
   display: flex;
@@ -711,6 +753,8 @@ body::before {
   gap: 24px;
   position: relative;
   overflow: hidden;
+  max-height: 90vh;
+  overflow-y: auto;
 }
 
 .modal-box::before {
@@ -800,6 +844,46 @@ body::before {
   0%, 100% { transform: translateX(0); }
   25%       { transform: translateX(-8px); }
   75%       { transform: translateX(8px); }
+}
+
+/* ── Textarea para sugestões ── */
+.suggestion-textarea {
+  min-height: 100px !important;
+  resize: vertical;
+  font-family: 'Inter', sans-serif;
+  letter-spacing: 0;
+}
+
+.suggestion-textarea::-webkit-scrollbar {
+  width: 6px;
+}
+
+.suggestion-textarea::-webkit-scrollbar-track {
+  background: rgba(88, 28, 135, 0.1);
+}
+
+.suggestion-textarea::-webkit-scrollbar-thumb {
+  background: rgba(139, 92, 246, 0.4);
+  border-radius: 3px;
+}
+
+.suggestion-textarea::-webkit-scrollbar-thumb:hover {
+  background: rgba(139, 92, 246, 0.6);
+}
+
+/* ── Contador de caracteres ── */
+.char-count {
+  font-size: 12px;
+  color: rgba(196, 181, 253, 0.6);
+  text-align: right;
+  letter-spacing: 0.5px;
+  margin-top: -8px;
+}
+
+.char-count #char-current {
+  color: #a78bfa;
+  font-weight: 700;
+  text-shadow: 0 0 8px rgba(168, 85, 247, 0.2);
 }
 
 .modal-error {
@@ -933,6 +1017,95 @@ body::before {
   border-radius: 6px;
 }
 
+/* ── Toast de sucesso ── */
+.success-toast {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.25) 0%, rgba(16, 185, 129, 0.15) 100%);
+  border: 1.5px solid rgba(34, 197, 94, 0.6);
+  border-radius: 12px;
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  z-index: 3000;
+  box-shadow: 0 8px 32px rgba(34, 197, 94, 0.2),
+              inset 0 1px 0 rgba(34, 197, 94, 0.3);
+  animation: slideInRight 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(400px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.success-toast span {
+  font-size: 13px;
+  color: #6ee7b7;
+  flex: 1;
+}
+
+.success-toast button {
+  background: none;
+  border: none;
+  color: rgba(34, 197, 94, 0.6);
+  cursor: pointer;
+  font-size: 16px;
+  padding: 0;
+  transition: all 0.2s;
+}
+
+.success-toast button:hover {
+  color: #6ee7b7;
+  transform: scale(1.2);
+}
+
+/* ── Toast de erro ── */
+#error-toast {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: linear-gradient(135deg, rgba(244, 114, 182, 0.25) 0%, rgba(236, 72, 153, 0.15) 100%);
+  border: 1.5px solid rgba(244, 114, 182, 0.6);
+  border-radius: 12px;
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  z-index: 3000;
+  box-shadow: 0 8px 32px rgba(244, 114, 182, 0.2),
+              inset 0 1px 0 rgba(244, 114, 182, 0.3);
+  animation: slideInRight 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+#error-toast span {
+  font-size: 13px;
+  color: #f472b6;
+  flex: 1;
+}
+
+#error-toast button {
+  background: none;
+  border: none;
+  color: rgba(244, 114, 182, 0.6);
+  cursor: pointer;
+  font-size: 16px;
+  padding: 0;
+  transition: all 0.2s;
+}
+
+#error-toast button:hover {
+  color: #f472b6;
+  transform: scale(1.2);
+}
+
 /* ── Scrollbar customizado ── */
 #body::-webkit-scrollbar {
   width: 8px;
@@ -948,6 +1121,23 @@ body::before {
 }
 
 #body::-webkit-scrollbar-thumb:hover {
+  background: rgba(139, 92, 246, 0.6);
+}
+
+.modal-box::-webkit-scrollbar {
+  width: 6px;
+}
+
+.modal-box::-webkit-scrollbar-track {
+  background: rgba(88, 28, 135, 0.1);
+}
+
+.modal-box::-webkit-scrollbar-thumb {
+  background: rgba(139, 92, 246, 0.4);
+  border-radius: 3px;
+}
+
+.modal-box::-webkit-scrollbar-thumb:hover {
   background: rgba(139, 92, 246, 0.6);
 }
 
@@ -982,10 +1172,11 @@ body::before {
     letter-spacing: 2px;
   }
 
-  .export-btn {
-    width: 100%;
-    text-align: center;
-    font-size: 12px;
+  .export-btn,
+  .suggestion-btn {
+    font-size: 10px;
+    padding: 10px 14px;
+    letter-spacing: 1px;
   }
 
   /* Stats bar mobile */
@@ -1124,6 +1315,16 @@ body::before {
     padding: 28px 24px;
   }
 
+  .suggestion-textarea {
+    min-height: 80px !important;
+    font-size: 13px;
+  }
+
+  .char-count {
+    font-size: 11px;
+    margin-top: -6px;
+  }
+
   /* Undo toast mobile */
   .undo-toast {
     width: calc(100% - 32px);
@@ -1140,6 +1341,26 @@ body::before {
   .undo-toast #undo-btn {
     font-size: 11px;
     padding: 6px 12px;
+  }
+
+  /* Toasts mobile */
+  .success-toast,
+  #error-toast {
+    width: calc(100% - 32px);
+    right: 16px;
+    left: 16px;
+    animation: slideInUp 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  @keyframes slideInUp {
+    from {
+      transform: translateY(100px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
   }
 
   .empty-msg {
@@ -1173,6 +1394,12 @@ body::before {
     height: 42px;
   }
 
+  .export-btn,
+  .suggestion-btn {
+    font-size: 9px;
+    padding: 8px 12px;
+  }
+
   .member-label {
     padding: 12px;
   }
@@ -1188,5 +1415,9 @@ body::before {
   .citem {
     padding: 10px 12px;
     min-height: 48px;
+  }
+
+  .suggestion-textarea {
+    min-height: 70px !important;
   }
 }
