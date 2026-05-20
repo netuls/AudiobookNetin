@@ -9,6 +9,8 @@
 </head>
 <body>
   <div class="root">
+
+    <!-- Topbar -->
     <div class="topbar">
       <div class="brand">
         <div class="logo">
@@ -18,13 +20,28 @@
           <div class="brand-name">STARK CSAT</div>
         </div>
       </div>
+      <button class="export-btn" id="export-btn">⬇ Exportar Excel</button>
     </div>
+
+    <!-- Stats bar -->
     <div class="stats-bar">
       <div class="stat">
         <div class="stat-n" id="ct-total">0</div>
         <div class="stat-l">Melhorias Registradas</div>
       </div>
     </div>
+
+    <!-- Toolbar: busca + ordenação -->
+    <div class="toolbar">
+      <input class="search-input" id="search-input" type="text" placeholder="🔍  Buscar melhoria...">
+      <select class="sort-select" id="sort-select">
+        <option value="newest">Mais recentes</option>
+        <option value="oldest">Mais antigas</option>
+        <option value="alpha">Alfabética</option>
+      </select>
+    </div>
+
+    <!-- Conteúdo -->
     <div id="body"></div>
   </div>
 
@@ -43,6 +60,15 @@
     </div>
   </div>
 
+  <!-- Toast desfazer -->
+  <div class="undo-toast" id="undo-toast">
+    <span id="undo-label"></span>
+    <button id="undo-btn">Desfazer</button>
+    <button id="undo-close">✕</button>
+  </div>
+
+  <!-- SheetJS para exportar Excel -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
