@@ -717,25 +717,217 @@ body::before {
 }
 
 @media (max-width: 560px) {
-  .member-row { grid-template-columns: 1fr; min-height: auto; }
+  /* Topbar mobile - mais compacto */
+  .topbar {
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
+    padding: 16px;
+  }
+
+  .brand {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .brand-name {
+    font-size: 16px;
+    letter-spacing: 2px;
+  }
+
+  .export-btn {
+    width: 100%;
+    text-align: center;
+    font-size: 12px;
+  }
+
+  /* Stats bar mobile - mais denso */
+  .stats-bar {
+    padding: 14px;
+    gap: 8px;
+  }
+
+  .stat {
+    flex: 1;
+    padding: 14px 16px;
+    border-radius: 10px;
+    background: rgba(168, 85, 247, 0.12);
+    border: 1px solid rgba(168, 85, 247, 0.25);
+  }
+
+  .stat-n {
+    font-size: 24px;
+    text-shadow: 0 0 15px rgba(168, 85, 247, 0.3);
+  }
+
+  .stat-l {
+    font-size: 10px;
+    letter-spacing: 1px;
+    margin-top: 4px;
+  }
+
+  /* Toolbar mobile */
+  .toolbar {
+    flex-direction: column;
+    gap: 10px;
+    padding: 12px;
+  }
+
+  .search-input,
+  .sort-select {
+    font-size: 13px;
+    padding: 10px 12px;
+  }
+
+  /* Member rows - layout mobile */
+  .member-row {
+    grid-template-columns: 1fr;
+    min-height: auto;
+  }
+
   .member-label {
     border-right: none;
     border-bottom: 2px solid rgba(168, 85, 247, 0.15);
-    padding: 16px;
+    padding: 14px 16px;
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
     min-height: auto;
+    background: linear-gradient(90deg, rgba(88, 28, 135, 0.2) 0%, rgba(88, 28, 135, 0.08) 100%);
+    gap: 12px;
   }
-  .topbar { flex-direction: column; gap: 14px; align-items: flex-start; padding: 16px; }
-  .stats-bar { justify-content: center; gap: 10px; padding: 16px; }
-  .toolbar { flex-direction: column; }
-  .modal-box { width: calc(100% - 32px); padding: 24px 20px; }
-  .undo-toast { width: calc(100% - 32px); white-space: normal; }
+
+  .member-name {
+    font-size: 13px;
+    letter-spacing: 2px;
+  }
+
+  .member-count {
+    font-size: 11px;
+    white-space: nowrap;
+    color: rgba(196, 181, 253, 0.6);
+  }
+
+  .member-content {
+    padding: 14px;
+    gap: 12px;
+  }
+
+  /* Items mobile - mais compactos */
+  .items-list {
+    gap: 8px;
+  }
+
+  .citem {
+    padding: 10px 12px;
+    gap: 8px;
+    min-height: 48px;
+    background: rgba(168, 85, 247, 0.12);
+    border: 1px solid rgba(168, 85, 247, 0.25);
+  }
+
+  .citem:hover {
+    background: rgba(168, 85, 247, 0.2);
+    border-color: rgba(168, 85, 247, 0.35);
+    transform: translateX(2px);
+  }
+
+  .citem-name {
+    font-size: 13px;
+  }
+
+  .citem-date {
+    font-size: 9px;
+  }
+
+  .citem-edit,
+  .citem-del {
+    width: 28px;
+    height: 28px;
+    font-size: 16px;
+  }
+
+  /* Add row mobile */
+  .add-row {
+    gap: 8px;
+  }
+
+  .add-input {
+    min-height: 44px;
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+
+  .add-btn {
+    padding: 10px 16px;
+    height: 44px;
+    font-size: 18px;
+  }
+
+  /* Modal mobile */
+  .modal-box {
+    width: calc(100% - 32px);
+    padding: 24px 20px;
+  }
+
+  /* Undo toast mobile */
+  .undo-toast {
+    width: calc(100% - 32px);
+    white-space: normal;
+    bottom: 20px;
+    padding: 12px 16px;
+    gap: 10px;
+  }
+
+  .undo-toast span {
+    font-size: 12px;
+  }
+
+  .undo-toast #undo-btn {
+    font-size: 11px;
+    padding: 6px 12px;
+  }
+
+  .empty-msg {
+    font-size: 11px;
+    padding: 4px 0;
+  }
 }
 
 @media (max-width: 420px) {
-  .brand-name { font-size: 14px; letter-spacing: 2px; }
-  .stat-n { font-size: 24px; }
-  .stats-bar { padding: 12px; }
+  .brand-name {
+    font-size: 14px;
+    letter-spacing: 1.5px;
+  }
+
+  .stat-n {
+    font-size: 20px;
+  }
+
+  .stat-l {
+    font-size: 9px;
+  }
+
+  .logo {
+    width: 44px;
+    height: 44px;
+    font-size: 22px;
+  }
+
+  .logo img {
+    width: 40px;
+    height: 40px;
+  }
+
+  .member-label {
+    padding: 12px;
+  }
+
+  .member-name {
+    font-size: 12px;
+  }
+
+  .member-content {
+    padding: 12px;
+  }
 }
