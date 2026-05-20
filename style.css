@@ -60,26 +60,24 @@ body::before {
   width: 52px;
   height: 52px;
   border-radius: 14px;
-  background: linear-gradient(135deg, rgba(168, 85, 247, 0.3) 0%, rgba(139, 92, 246, 0.2) 100%);
-  border: 2px solid rgba(168, 85, 247, 0.5);
+  background: transparent;
+  border: none;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
   flex-shrink: 0;
-  font-size: 26px;
-  box-shadow: 0 0 30px rgba(168, 85, 247, 0.4);
+  box-shadow: none;
   transition: all 0.3s ease;
 }
 
 .logo:hover {
   transform: scale(1.05);
-  box-shadow: 0 0 50px rgba(168, 85, 247, 0.6);
 }
 
 .logo img {
-  width: 46px;
-  height: 46px;
+  width: 52px;
+  height: 52px;
   object-fit: contain;
 }
 
@@ -238,7 +236,6 @@ body::before {
 
 .member-row:hover { background: rgba(168, 85, 247, 0.04); }
 
-/* flash verde ao adicionar */
 .member-row.flash-success {
   animation: flash-green 0.8s ease;
 }
@@ -294,12 +291,6 @@ body::before {
   box-shadow: 0 0 8px rgba(168, 85, 247, 0.5);
 }
 
-.progress-label {
-  font-size: 10px;
-  color: rgba(196, 181, 253, 0.35);
-  letter-spacing: 1px;
-}
-
 .member-content {
   padding: 20px;
   display: flex;
@@ -338,7 +329,6 @@ body::before {
   to { opacity: 1; transform: translateX(0); }
 }
 
-/* itens já existentes aparecem normalmente */
 .citem:not(.item-enter) {
   opacity: 1;
   transform: none;
