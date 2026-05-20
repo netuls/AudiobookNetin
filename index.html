@@ -9,7 +9,26 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="root">
+  <!-- ── Intro Screen ── -->
+  <div id="intro-screen">
+    <div id="intro-bg-lines"></div>
+    <div id="intro-particles"></div>
+    <div id="intro-content">
+      <div id="intro-logo-wrap">
+        <div id="intro-logo-ring"></div>
+        <div id="intro-logo-ring2"></div>
+        <div id="intro-logo-img">
+          <img src="cardapinho.webp" alt="Logo" onerror="this.style.display='none'; this.parentElement.textContent='🍽️';">
+        </div>
+      </div>
+      <div id="intro-brand">STARK CSAT</div>
+      <div id="intro-tagline">Sistema de Melhorias</div>
+      <div id="intro-bar-wrap"><div id="intro-bar"></div></div>
+      <div id="intro-status">Inicializando...</div>
+    </div>
+  </div>
+
+  <div class="root" id="main-root" style="opacity:0;">
     <!-- Topbar -->
     <div class="topbar">
       <div class="brand">
