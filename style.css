@@ -457,8 +457,10 @@ body::before {
   padding: 12px 14px;
   outline: none;
   transition: all 0.3s ease;
-  resize: vertical;
+  resize: none;
   min-height: 50px;
+  overflow-y: hidden;
+  line-height: 1.5;
 }
 
 .add-input:focus {
