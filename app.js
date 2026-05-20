@@ -12,10 +12,8 @@ let undoItem = null;
 let filterText = '';
 let sortMode = 'newest'; // 'newest' | 'oldest' | 'alpha'
 
-// ── Max por membro para barra de progresso ──
 const MAX_ITEMS = 10;
 
-// ── Utilitários ──
 function formatDate(ts) {
   const d = new Date(ts);
   return d.toLocaleDateString('pt-BR') + ' ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
@@ -34,7 +32,6 @@ function filterItems(items) {
   return items.filter(i => i.name.toLowerCase().includes(filterText.toLowerCase()));
 }
 
-// ── Adicionar ──
 function add(member) {
   const inp = document.getElementById('i-' + member);
   const val = inp.value.trim();
@@ -61,7 +58,6 @@ function animateNewItem(id) {
   }, 10);
 }
 
-// ── Editar ──
 function startEdit(member, id) {
   const item = data[member].find(i => i.id === id);
   if (!item) return;
@@ -90,7 +86,6 @@ function saveEdit(member, id) {
   render();
 }
 
-// ── Deletar ──
 function remove(member, id) {
   pendingDelete = { member, id };
   document.getElementById('pw-modal').style.display = 'flex';
@@ -124,7 +119,6 @@ function confirmDelete() {
   }
 }
 
-// ── Desfazer exclusão ──
 function showUndo(member, item) {
   if (undoTimeout) clearTimeout(undoTimeout);
   undoItem = { member, item };
@@ -147,7 +141,6 @@ function doUndo() {
   render();
 }
 
-// ── Filtro e ordenação ──
 function applyFilter(val) {
   filterText = val;
   render();
@@ -158,7 +151,6 @@ function applySort(val) {
   render();
 }
 
-// ── Exportar Excel ──
 function exportExcel() {
   const wb = XLSX.utils.book_new();
   const rows = [['Membro', 'Melhoria', 'Data/Hora']];
@@ -173,7 +165,6 @@ function exportExcel() {
   XLSX.writeFile(wb, 'stark-csat.xlsx');
 }
 
-// ── Render ──
 function render() {
   let total = 0;
   MEMBERS.forEach(m => { total += data[m].length; });
@@ -184,7 +175,7 @@ function render() {
     const items = filterItems(sortItems(allItems));
     const pct = Math.min(100, Math.round((allItems.length / MAX_ITEMS) * 100));
 
-    // ── Se filtro ativo e nenhum item bate, oculta o membro inteiro ──
+    // Esconde membro se filtro ativo e sem resultados
     if (filterText.trim() !== '' && items.length === 0) return '';
 
     const itemsHTML = items.length
@@ -207,7 +198,6 @@ function render() {
           <div class="progress-bar">
             <div class="progress-fill" style="width:${pct}%"></div>
           </div>
-          <div class="progress-label">${pct}% de ${MAX_ITEMS}</div>
         </div>
         <div class="member-content">
           <div class="items-list">${itemsHTML}</div>
@@ -225,7 +215,6 @@ function render() {
   }).join('');
 }
 
-// ── Eventos globais ──
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') closeModal();
 });
