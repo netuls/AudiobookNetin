@@ -155,8 +155,8 @@ body::before {
 
 /* ── Stats bar ── */
 .stats-bar {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  display: flex;
+  justify-content: center;
   gap: 12px;
   padding: 24px;
   background: linear-gradient(180deg, rgba(88, 28, 135, 0.1) 0%, transparent 100%);
@@ -164,7 +164,7 @@ body::before {
 }
 
 .stat {
-  padding: 20px 16px;
+  padding: 20px 32px;
   text-align: center;
   border-radius: 12px;
   background: rgba(168, 85, 247, 0.08);
@@ -187,16 +187,6 @@ body::before {
   color: #ede9fe;
   line-height: 1;
   text-shadow: 0 0 20px rgba(168, 85, 247, 0.4);
-}
-
-.stat-n.pend { 
-  color: #a78bfa;
-  text-shadow: 0 0 20px rgba(167, 139, 250, 0.6);
-}
-
-.stat-n.conc { 
-  color: #34d399;
-  text-shadow: 0 0 20px rgba(52, 211, 153, 0.4);
 }
 
 .stat-l {
@@ -280,30 +270,6 @@ body::before {
   border-color: rgba(168, 85, 247, 0.4);
   box-shadow: 0 0 20px rgba(168, 85, 247, 0.2);
   transform: translateX(4px);
-}
-
-.citem.done { 
-  opacity: 0.4;
-  background: rgba(52, 211, 153, 0.08);
-  border-color: rgba(52, 211, 153, 0.2);
-}
-
-.citem.done .citem-name { 
-  text-decoration: line-through;
-  color: rgba(196, 181, 253, 0.3);
-}
-
-.citem-check {
-  width: 16px;
-  height: 16px;
-  accent-color: #a855f7;
-  flex-shrink: 0;
-  cursor: pointer;
-  transition: transform 0.2s ease;
-}
-
-.citem-check:hover {
-  transform: scale(1.1);
 }
 
 .citem-name {
@@ -424,7 +390,7 @@ body::before {
   }
 
   .stats-bar {
-    grid-template-columns: 1fr;
+    justify-content: center;
     gap: 10px;
     padding: 16px;
   }
