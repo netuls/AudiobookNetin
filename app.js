@@ -1,4 +1,5 @@
 const MEMBERS = ['Victor', 'Leticia', 'Neto', 'Ygaro', 'Joab'];
+const PASSWORD = 'cardapinho2026';
 
 let data = {};
 MEMBERS.forEach(m => (data[m] = []));
@@ -14,6 +15,11 @@ function add(member) {
 }
 
 function remove(member, id) {
+  const password = prompt('🔐 Digite a senha para deletar:');
+  if (password !== PASSWORD) {
+    alert('❌ Senha incorreta!');
+    return;
+  }
   data[member] = data[member].filter(i => i.id !== id);
   render();
 }
@@ -34,7 +40,7 @@ function render() {
       ? items.map(it => `
           <div class="citem">
             <span class="citem-name">${it.name}</span>
-            <button class="citem-del" onclick="remove('${m}', ${it.id})">×</button>
+            <button class="citem-del" onclick="remove('${m}', ${it.id})" title="Clique para deletar (requer senha)">×</button>
           </div>`).join('')
       : '<div class="empty-msg">nenhum registro ainda</div>';
 
