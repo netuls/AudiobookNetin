@@ -682,9 +682,14 @@ window.addEventListener('popstate', () => {
     }, 350);
   }
 
+  const START_TIME = Date.now();
+  const MIN_DURATION = 2000; // mínimo 2 segundos de intro
+
   const ticker = setInterval(() => {
-    progress += Math.random() * 16 + 8;
-    if (progress >= 100) { progress = 100; exitIntro(); return; }
+    progress += Math.random() * 7 + 3;
+    const elapsed = Date.now() - START_TIME;
+    if (progress >= 100 && elapsed >= MIN_DURATION) { progress = 100; exitIntro(); return; }
+    if (progress >= 100) progress = 98; // segura em 98% até passar 2s
     if (bar) bar.style.width = progress + '%';
     const newIdx = Math.min(Math.floor(progress / 26), messages.length - 1);
     if (newIdx !== msgIdx) {
@@ -700,7 +705,7 @@ window.addEventListener('popstate', () => {
   }, 130);
 
   // Garante que a intro fecha mesmo se algo travar
-  setTimeout(exitIntro, 5000);
+  setTimeout(exitIntro, 6000);
 })();
 
 console.log('✅ App.js carregado completamente!');
