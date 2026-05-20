@@ -277,13 +277,19 @@ function doUndo() {
 
 // ── [NOVO] Sugestões ──
 function openSuggestionModal() {
-  console.log('Abrindo modal de sugestão...');
-  document.getElementById('suggestion-modal').style.display = 'flex';
-  document.getElementById('suggestion-name').value = '';
-  document.getElementById('suggestion-text').value = '';
-  document.getElementById('char-current').textContent = '0';
-  document.getElementById('suggestion-err').textContent = '';
-  setTimeout(() => document.getElementById('suggestion-name').focus(), 50);
+  console.log('✅ Abrindo modal de sugestão...');
+  const modal = document.getElementById('suggestion-modal');
+  if (modal) {
+    modal.style.display = 'flex';
+    console.log('✅ Modal aberto com sucesso!');
+    document.getElementById('suggestion-name').value = '';
+    document.getElementById('suggestion-text').value = '';
+    document.getElementById('char-current').textContent = '0';
+    document.getElementById('suggestion-err').textContent = '';
+    setTimeout(() => document.getElementById('suggestion-name').focus(), 50);
+  } else {
+    console.error('❌ Modal de sugestão não encontrado no DOM');
+  }
 }
 
 function closeSuggestionModal() {
@@ -430,50 +436,89 @@ window.openSuggestionModal    = openSuggestionModal;
 window.closeSuggestionModal   = closeSuggestionModal;
 window.submitSuggestion       = submitSuggestion;
 
-// ── Eventos globais ──
-document.addEventListener('keydown', e => { 
-  if (e.key === 'Escape') {
-    closeModal();
-    closeSuggestionModal();
-  }
-});
+// ── Esperar DOM estar pronto ──
+function setupEventListeners() {
+  console.log('Configurando event listeners...');
 
-const pwInput = document.getElementById('modal-pw');
-if (pwInput) pwInput.addEventListener('keydown', e => { if (e.key === 'Enter') confirmDelete(); });
-
-document.getElementById('search-input').addEventListener('input',  e => applyFilter(e.target.value));
-document.getElementById('member-select').addEventListener('change', e => applyMemberFilter(e.target.value));
-document.getElementById('export-btn').addEventListener('click', exportExcel);
-
-// ── Eventos do modal de sugestão ──
-const suggestionBtn = document.getElementById('suggestion-btn');
-if (suggestionBtn) {
-  suggestionBtn.addEventListener('click', openSuggestionModal);
-  console.log('✅ Listener de sugestão adicionado');
-}
-
-const suggestionText = document.getElementById('suggestion-text');
-if (suggestionText) {
-  suggestionText.addEventListener('input', e => {
-    document.getElementById('char-current').textContent = e.target.value.length;
+  // Escape para fechar modais
+  document.addEventListener('keydown', e => { 
+    if (e.key === 'Escape') {
+      closeModal();
+      closeSuggestionModal();
+    }
   });
+
+  // Modal de senha
+  const pwInput = document.getElementById('modal-pw');
+  if (pwInput) {
+    pwInput.addEventListener('keydown', e => { 
+      if (e.key === 'Enter') confirmDelete(); 
+    });
+  }
+
+  // Busca
+  const searchInput = document.getElementById('search-input');
+  if (searchInput) {
+    searchInput.addEventListener('input', e => applyFilter(e.target.value));
+  }
+
+  // Filtro de membro
+  const memberSelect = document.getElementById('member-select');
+  if (memberSelect) {
+    memberSelect.addEventListener('change', e => applyMemberFilter(e.target.value));
+  }
+
+  // Exportar
+  const exportBtn = document.getElementById('export-btn');
+  if (exportBtn) {
+    exportBtn.addEventListener('click', exportExcel);
+  }
+
+  // SUGESTÃO - LISTENER PRINCIPAL
+  const suggestionBtn = document.getElementById('suggestion-btn');
+  if (suggestionBtn) {
+    suggestionBtn.addEventListener('click', openSuggestionModal);
+    console.log('✅ Listener de sugestão adicionado com sucesso!');
+  } else {
+    console.warn('❌ Botão de sugestão não encontrado');
+  }
+
+  // Contador de caracteres
+  const suggestionText = document.getElementById('suggestion-text');
+  if (suggestionText) {
+    suggestionText.addEventListener('input', e => {
+      document.getElementById('char-current').textContent = e.target.value.length;
+    });
+  }
+
+  // Desfazer
+  const undoBtn = document.getElementById('undo-btn');
+  const undoClose = document.getElementById('undo-close');
+  if (undoBtn) undoBtn.addEventListener('click', doUndo);
+  if (undoClose) undoClose.addEventListener('click', hideUndo);
+
+  // Auto-resize
+  const body = document.getElementById('body');
+  if (body) {
+    body.addEventListener('input', e => {
+      if (e.target.classList.contains('add-input')) {
+        e.target.style.height = 'auto';
+        e.target.style.height = e.target.scrollHeight + 'px';
+      }
+    });
+  }
+
+  console.log('✅ Todos os listeners configurados!');
 }
 
-// ── Toast ──
-const undoBtn = document.getElementById('undo-btn');
-const undoClose = document.getElementById('undo-close');
-if (undoBtn) undoBtn.addEventListener('click', doUndo);
-if (undoClose) undoClose.addEventListener('click', hideUndo);
+// Chamar quando DOM estiver pronto
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', setupEventListeners);
+} else {
+  setupEventListeners();
+}
 
-// ── Auto-resize das textareas ──
-document.getElementById('body').addEventListener('input', e => {
-  if (e.target.classList.contains('add-input')) {
-    e.target.style.height = 'auto';
-    e.target.style.height = e.target.scrollHeight + 'px';
-  }
-});
-
-// ── Suporte ao botão Voltar/Avançar do navegador ──
+// Suporte ao botão Voltar/Avançar
 window.addEventListener('popstate', () => {
   readFiltersFromURL();
   const searchInput  = document.getElementById('search-input');
@@ -483,4 +528,4 @@ window.addEventListener('popstate', () => {
   render();
 });
 
-console.log('✅ App.js carregado com sucesso!');
+console.log('✅ App.js carregado completamente!');
