@@ -225,6 +225,48 @@ body::before {
   left: 100%;
 }
 
+/* ── Botão Ver Sugestões ── */
+.view-suggestions-btn {
+  font-family: 'Orbitron', monospace;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.25) 0%, rgba(14, 165, 233, 0.15) 100%);
+  border: 1.5px solid rgba(56, 189, 248, 0.5);
+  border-radius: 12px;
+  color: #7dd3fc;
+  cursor: pointer;
+  padding: 12px 18px;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 4px 16px rgba(56, 189, 248, 0.15),
+              inset 0 1px 0 rgba(56, 189, 248, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.view-suggestions-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  transition: left 0.5s;
+}
+
+.view-suggestions-btn:hover {
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.45) 0%, rgba(14, 165, 233, 0.3) 100%);
+  border-color: rgba(56, 189, 248, 0.8);
+  box-shadow: 0 8px 32px rgba(56, 189, 248, 0.3),
+              inset 0 0 10px rgba(56, 189, 248, 0.2);
+  transform: translateY(-3px);
+}
+
+.view-suggestions-btn:hover::before {
+  left: 100%;
+}
+
 /* ── Stats bar ── */
 .stats-bar {
   display: flex;
@@ -1175,7 +1217,8 @@ body::before {
   }
 
   .export-btn,
-  .suggestion-btn {
+  .suggestion-btn,
+  .view-suggestions-btn {
     font-size: 10px;
     padding: 10px 14px;
     letter-spacing: 1px;
@@ -1397,7 +1440,8 @@ body::before {
   }
 
   .export-btn,
-  .suggestion-btn {
+  .suggestion-btn,
+  .view-suggestions-btn {
     font-size: 9px;
     padding: 8px 12px;
   }
@@ -1421,5 +1465,133 @@ body::before {
 
   .suggestion-textarea {
     min-height: 70px !important;
+  }
+}
+
+
+
+/* ── Painel de sugestões ── */
+.suggestions-panel-box {
+  width: 580px;
+  max-width: calc(100vw - 32px);
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.suggestions-panel-meta {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.suggestions-panel-count {
+  font-size: 12px;
+  letter-spacing: 2px;
+  color: rgba(196, 181, 253, 0.6);
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.suggestions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow-y: auto;
+  max-height: 50vh;
+  padding-right: 4px;
+}
+
+.suggestions-empty {
+  text-align: center;
+  color: rgba(196, 181, 253, 0.4);
+  font-size: 14px;
+  padding: 32px 0;
+  letter-spacing: 1px;
+}
+
+.suggestion-item {
+  background: linear-gradient(135deg, rgba(88, 28, 135, 0.25) 0%, rgba(50, 20, 80, 0.15) 100%);
+  border: 1.5px solid rgba(139, 92, 246, 0.3);
+  border-radius: 12px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+
+.suggestion-item:hover {
+  border-color: rgba(139, 92, 246, 0.55);
+  background: linear-gradient(135deg, rgba(88, 28, 135, 0.38) 0%, rgba(50, 20, 80, 0.25) 100%);
+}
+
+.suggestion-item-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.suggestion-item-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #a78bfa;
+  letter-spacing: 0.5px;
+  flex: 1;
+}
+
+.suggestion-item-date {
+  font-size: 11px;
+  color: rgba(196, 181, 253, 0.45);
+}
+
+.suggestion-item-del {
+  background: rgba(244, 114, 182, 0.1);
+  border: 1px solid rgba(244, 114, 182, 0.3);
+  border-radius: 6px;
+  color: rgba(244, 114, 182, 0.6);
+  cursor: pointer;
+  font-size: 16px;
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.suggestion-item-del:hover {
+  background: rgba(244, 114, 182, 0.25);
+  border-color: rgba(244, 114, 182, 0.6);
+  color: #f472b6;
+}
+
+.suggestion-item-text {
+  font-size: 14px;
+  color: #e9d5ff;
+  line-height: 1.6;
+  word-break: break-word;
+  padding: 8px 12px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  border-left: 3px solid rgba(139, 92, 246, 0.5);
+}
+
+/* Scrollbar painel sugestões */
+.suggestions-list::-webkit-scrollbar { width: 6px; }
+.suggestions-list::-webkit-scrollbar-track { background: rgba(88, 28, 135, 0.1); }
+.suggestions-list::-webkit-scrollbar-thumb { background: rgba(139, 92, 246, 0.4); border-radius: 3px; }
+.suggestions-list::-webkit-scrollbar-thumb:hover { background: rgba(139, 92, 246, 0.6); }
+
+@media (max-width: 560px) {
+  .view-suggestions-btn {
+    font-size: 10px;
+    padding: 10px 14px;
+    letter-spacing: 1px;
+  }
+  .suggestions-panel-box {
+    padding: 24px 20px;
   }
 }
