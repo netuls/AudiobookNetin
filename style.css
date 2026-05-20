@@ -1196,6 +1196,64 @@ body::before {
   background: rgba(139, 92, 246, 0.6);
 }
 
+/* ── Skeleton Loading ── */
+.skeleton-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px 18px;
+  border-radius: 12px;
+  background: linear-gradient(135deg,
+    rgba(88, 28, 135, 0.15) 0%,
+    rgba(50, 20, 80, 0.1) 100%);
+  border: 1.5px solid rgba(139, 92, 246, 0.15);
+  min-height: 60px;
+  justify-content: center;
+}
+
+.skeleton-line {
+  height: 12px;
+  border-radius: 6px;
+  background: linear-gradient(
+    90deg,
+    rgba(139, 92, 246, 0.12) 0%,
+    rgba(168, 85, 247, 0.28) 40%,
+    rgba(139, 92, 246, 0.12) 80%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.6s ease-in-out infinite;
+}
+
+.skeleton-line.long   { width: 75%; }
+.skeleton-line.medium { width: 55%; }
+.skeleton-line.short  { width: 30%; height: 9px; opacity: 0.6; }
+
+@keyframes skeleton-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.skeleton-count {
+  display: inline-block;
+  width: 80px;
+  height: 10px;
+  border-radius: 5px;
+  background: linear-gradient(
+    90deg,
+    rgba(139, 92, 246, 0.12) 0%,
+    rgba(168, 85, 247, 0.28) 40%,
+    rgba(139, 92, 246, 0.12) 80%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.6s ease-in-out infinite;
+  vertical-align: middle;
+}
+
+/* Delay nos skeleton items para efeito cascata */
+.skeleton-item:nth-child(1) { animation-delay: 0ms; }
+.skeleton-item:nth-child(2) .skeleton-line { animation-delay: 150ms; }
+.skeleton-item:nth-child(3) .skeleton-line { animation-delay: 300ms; }
+
 /* ── Responsive ── */
 @media (max-width: 900px) {
   .member-row { grid-template-columns: 160px 1fr; }
