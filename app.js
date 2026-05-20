@@ -59,10 +59,8 @@ render();
 (function syncControls() {
   const searchInput   = document.getElementById('search-input');
   const memberSelect  = document.getElementById('member-select');
-  const sortSelect    = document.getElementById('sort-select'); // ajuste o id se diferente
   if (searchInput)  searchInput.value  = filterText;
   if (memberSelect) memberSelect.value = filterMember;
-  if (sortSelect)   sortSelect.value   = sortMode;
 })();
 
 // ── Escutar Firebase em tempo real ──
@@ -95,7 +93,6 @@ function filterItems(items) {
 
 // ── [NOVO] Notificação de erro inline ──
 function showError(message) {
-  // Remove qualquer toast de erro existente
   const existing = document.getElementById('error-toast');
   if (existing) existing.remove();
 
@@ -108,8 +105,25 @@ function showError(message) {
   `;
   document.body.appendChild(toast);
 
-  // Auto-remove após 6 segundos
   setTimeout(() => toast && toast.remove(), 6000);
+}
+
+// ── [NOVO] Notificação de sucesso ──
+function showSuccess(message) {
+  const existing = document.getElementById('success-toast');
+  if (existing) existing.remove();
+
+  const toast = document.createElement('div');
+  toast.id = 'success-toast';
+  toast.className = 'success-toast';
+  toast.setAttribute('role', 'alert');
+  toast.innerHTML = `
+    <span>✅ ${message}</span>
+    <button onclick="this.parentElement.remove()" aria-label="Fechar">×</button>
+  `;
+  document.body.appendChild(toast);
+
+  setTimeout(() => toast && toast.remove(), 5000);
 }
 
 // ── Adicionar ──
@@ -118,7 +132,7 @@ function add(member) {
   const val = inp.value.trim();
   if (!val) return;
 
-  const btn = inp.nextElementSibling; // botão +
+  const btn = inp.nextElementSibling;
   inp.disabled = true;
   if (btn) btn.disabled = true;
 
@@ -173,7 +187,6 @@ function saveEdit(member, firebaseKey) {
   const val = inp.value.trim();
   if (!val) return;
 
-  // Desabilita controles durante o save
   inp.disabled = true;
   const saveBtn   = inp.nextElementSibling;
   const cancelBtn = saveBtn ? saveBtn.nextElementSibling : null;
@@ -185,7 +198,6 @@ function saveEdit(member, firebaseKey) {
     .catch(err => {
       console.error('Erro ao editar:', err);
       showError('Não foi possível salvar a edição. Verifique sua conexão.');
-      // Reabilita para nova tentativa
       if (inp)       inp.disabled       = false;
       if (saveBtn)   saveBtn.disabled   = false;
       if (cancelBtn) cancelBtn.disabled = false;
@@ -224,7 +236,6 @@ function confirmDelete() {
   const item    = localData[member][firebaseKey];
   const itemRef = ref(db, `melhorias/${member}/${firebaseKey}`);
 
-  // Fecha o modal imediatamente para boa UX
   closeModal();
 
   remove(itemRef)
@@ -264,7 +275,60 @@ function doUndo() {
   hideUndo();
 }
 
-// ── Filtros (agora sincronizam com a URL) ──
+// ── [NOVO] Sugestões ──
+function openSuggestionModal() {
+  document.getElementById('suggestion-modal').style.display = 'flex';
+  document.getElementById('suggestion-name').value = '';
+  document.getElementById('suggestion-text').value = '';
+  document.getElementById('char-current').textContent = '0';
+  document.getElementById('suggestion-err').textContent = '';
+  setTimeout(() => document.getElementById('suggestion-name').focus(), 50);
+}
+
+function closeSuggestionModal() {
+  document.getElementById('suggestion-modal').style.display = 'none';
+  document.getElementById('suggestion-name').value = '';
+  document.getElementById('suggestion-text').value = '';
+  document.getElementById('suggestion-err').textContent = '';
+}
+
+function submitSuggestion() {
+  const name = document.getElementById('suggestion-name').value.trim();
+  const text = document.getElementById('suggestion-text').value.trim();
+  const err = document.getElementById('suggestion-err');
+
+  if (!name || !text) {
+    err.textContent = 'Por favor, preencha todos os campos.';
+    return;
+  }
+
+  if (name.length < 2) {
+    err.textContent = 'Nome deve ter pelo menos 2 caracteres.';
+    return;
+  }
+
+  if (text.length < 10) {
+    err.textContent = 'Sugestão deve ter pelo menos 10 caracteres.';
+    return;
+  }
+
+  const suggestionsRef = ref(db, 'sugestoes');
+  push(suggestionsRef, {
+    name: name,
+    texto: text,
+    ts: Date.now()
+  })
+    .then(() => {
+      showSuccess('Sugestão enviada com sucesso! 🎉');
+      closeSuggestionModal();
+    })
+    .catch(err => {
+      console.error('Erro ao enviar sugestão:', err);
+      err.textContent = 'Erro ao enviar. Tente novamente.';
+    });
+}
+
+// ── Filtros ──
 function applyFilter(val) {
   filterText = val;
   pushFiltersToURL();
@@ -318,7 +382,6 @@ function render() {
 
     if (filterText.trim() !== '' && items.length === 0) return '';
 
-    // [NOVO] Botões com aria-label e classe touch-friendly
     const itemsHTML = items.length
       ? items.map(it => `
           <div class="citem" id="item-${it.key}">
@@ -355,13 +418,16 @@ function render() {
 }
 
 // ── Expor funções globais ──
-window.add           = add;
-window.startEdit     = startEdit;
-window.saveEdit      = saveEdit;
-window.removeItem    = removeItem;
-window.closeModal    = closeModal;
-window.confirmDelete = confirmDelete;
-window.render        = render;
+window.add                    = add;
+window.startEdit              = startEdit;
+window.saveEdit               = saveEdit;
+window.removeItem             = removeItem;
+window.closeModal             = closeModal;
+window.confirmDelete          = confirmDelete;
+window.render                 = render;
+window.openSuggestionModal    = openSuggestionModal;
+window.closeSuggestionModal   = closeSuggestionModal;
+window.submitSuggestion       = submitSuggestion;
 
 // ── Eventos globais ──
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
@@ -372,10 +438,11 @@ if (pwInput) pwInput.addEventListener('keydown', e => { if (e.key === 'Enter') c
 document.getElementById('search-input').addEventListener('input',  e => applyFilter(e.target.value));
 document.getElementById('member-select').addEventListener('change', e => applyMemberFilter(e.target.value));
 document.getElementById('export-btn').addEventListener('click', exportExcel);
+document.getElementById('suggestion-btn').addEventListener('click', openSuggestionModal);
 document.getElementById('undo-btn').addEventListener('click', doUndo);
 document.getElementById('undo-close').addEventListener('click', hideUndo);
 
-// ── Auto-resize das textareas de adicionar ──
+// ── Auto-resize das textareas ──
 document.getElementById('body').addEventListener('input', e => {
   if (e.target.classList.contains('add-input')) {
     e.target.style.height = 'auto';
@@ -383,15 +450,20 @@ document.getElementById('body').addEventListener('input', e => {
   }
 });
 
-// Suporte ao botão Voltar/Avançar do navegador
+// ── Contagem de caracteres da sugestão ──
+const suggestionText = document.getElementById('suggestion-text');
+if (suggestionText) {
+  suggestionText.addEventListener('input', e => {
+    document.getElementById('char-current').textContent = e.target.value.length;
+  });
+}
+
+// ── Suporte ao botão Voltar/Avançar do navegador ──
 window.addEventListener('popstate', () => {
   readFiltersFromURL();
-  // Sincroniza controles visuais
   const searchInput  = document.getElementById('search-input');
   const memberSelect = document.getElementById('member-select');
-  const sortSelect   = document.getElementById('sort-select');
   if (searchInput)  searchInput.value  = filterText;
   if (memberSelect) memberSelect.value = filterMember;
-  if (sortSelect)   sortSelect.value   = sortMode;
   render();
 });
