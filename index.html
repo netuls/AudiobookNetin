@@ -9,28 +9,29 @@
 </head>
 <body>
   <div class="root">
-    <header class="topbar">
+    <!-- Topbar -->
+    <div class="topbar">
       <div class="brand">
         <div class="logo">
           <img src="cardapinho.webp" alt="Cardapinho" onerror="this.style.display='none'; this.parentElement.textContent='🍽️';">
         </div>
         <div>
-          <h1 class="brand-name">STARK CSAT</h1>
+          <div class="brand-name">STARK CSAT</div>
         </div>
       </div>
       <button class="export-btn" id="export-btn">⬇ Exportar Excel</button>
-    </header>
-
-    <section class="stats-bar" aria-label="Estatísticas">
+    </div>
+    <!-- Stats bar -->
+    <div class="stats-bar">
       <div class="stat">
         <div class="stat-n" id="ct-total">0</div>
         <div class="stat-l">Melhorias Registradas</div>
       </div>
-    </section>
-
-    <section class="toolbar" aria-label="Filtros e Busca">
-      <input class="search-input" id="search-input" type="text" placeholder="🔍  Buscar melhoria..." aria-label="Buscar melhoria">
-      <select class="sort-select" id="member-select" aria-label="Filtrar por membro">
+    </div>
+    <!-- Toolbar -->
+    <div class="toolbar">
+      <input class="search-input" id="search-input" type="text" placeholder="🔍  Buscar melhoria...">
+      <select class="sort-select" id="member-select">
         <option value="">👤 Todos os membros</option>
         <option value="Victor">Victor</option>
         <option value="Leticia">Leticia</option>
@@ -38,15 +39,16 @@
         <option value="Ygaro">Ygaro</option>
         <option value="Joab">Joab</option>
       </select>
-    </section>
-
-    <main id="body"></main>
+    </div>
+    <!-- Conteúdo -->
+    <div id="body"></div>
   </div>
 
-  <div id="pw-modal" class="modal-overlay" style="display:none;" role="dialog" aria-labelledby="modal-title" aria-modal="true">
+  <!-- Modal de senha -->
+  <div id="pw-modal" class="modal-overlay" style="display:none;">
     <div class="modal-box">
-      <div class="modal-icon" aria-hidden="true">🔐</div>
-      <div class="modal-title" id="modal-title">Confirmar exclusão</div>
+      <div class="modal-icon">🔐</div>
+      <div class="modal-title">Confirmar exclusão</div>
       <div class="modal-sub">Digite a senha para continuar</div>
       <input class="modal-input" id="modal-pw" type="password" placeholder="••••••••••••••" autocomplete="off">
       <div class="modal-error" id="modal-err"></div>
@@ -57,12 +59,14 @@
     </div>
   </div>
 
-  <div class="undo-toast" id="undo-toast" role="alert" aria-live="assertive">
+  <!-- Toast desfazer -->
+  <div class="undo-toast" id="undo-toast">
     <span id="undo-label"></span>
     <button id="undo-btn">Desfazer</button>
-    <button id="undo-close" aria-label="Fechar notificação">✕</button>
+    <button id="undo-close">✕</button>
   </div>
 
+  <!-- SheetJS -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script type="module" src="app.js"></script>
 </body>
