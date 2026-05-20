@@ -340,12 +340,13 @@ function render() {
         <div class="member-content">
           <div class="items-list">${itemsHTML}</div>
           <div class="add-row">
-            <input
+            <textarea
               class="add-input"
               id="i-${m}"
               placeholder="Nova melhoria..."
-              onkeydown="if(event.key==='Enter') add('${m}')"
-            >
+              rows="2"
+              onkeydown="if(event.key==='Enter' && !event.shiftKey){ event.preventDefault(); add('${m}'); }"
+            ></textarea>
             <button class="add-btn" onclick="add('${m}')">+</button>
           </div>
         </div>
@@ -373,6 +374,14 @@ document.getElementById('member-select').addEventListener('change', e => applyMe
 document.getElementById('export-btn').addEventListener('click', exportExcel);
 document.getElementById('undo-btn').addEventListener('click', doUndo);
 document.getElementById('undo-close').addEventListener('click', hideUndo);
+
+// ── Auto-resize das textareas de adicionar ──
+document.getElementById('body').addEventListener('input', e => {
+  if (e.target.classList.contains('add-input')) {
+    e.target.style.height = 'auto';
+    e.target.style.height = e.target.scrollHeight + 'px';
+  }
+});
 
 // Suporte ao botão Voltar/Avançar do navegador
 window.addEventListener('popstate', () => {
