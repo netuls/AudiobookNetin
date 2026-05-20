@@ -652,4 +652,55 @@ window.addEventListener('popstate', () => {
   render();
 });
 
+
+// ── Intro Screen ──
+(function runIntro() {
+  const screen = document.getElementById('intro-screen');
+  const bar    = document.getElementById('intro-bar');
+  const status = document.getElementById('intro-status');
+  const main   = document.getElementById('main-root');
+  if (!screen) return;
+
+  const messages = [
+    'Conectando ao Firebase...',
+    'Carregando melhorias...',
+    'Preparando interface...',
+    'Pronto.',
+  ];
+
+  let progress = 0;
+  let msgIdx   = 0;
+
+  function exitIntro() {
+    clearInterval(ticker);
+    if (bar)    bar.style.width     = '100%';
+    if (status) status.textContent  = 'Pronto.';
+    setTimeout(() => {
+      screen.classList.add('intro-exit');
+      if (main) main.classList.add('site-enter');
+      setTimeout(() => { screen.style.display = 'none'; }, 900);
+    }, 350);
+  }
+
+  const ticker = setInterval(() => {
+    progress += Math.random() * 16 + 8;
+    if (progress >= 100) { progress = 100; exitIntro(); return; }
+    if (bar) bar.style.width = progress + '%';
+    const newIdx = Math.min(Math.floor(progress / 26), messages.length - 1);
+    if (newIdx !== msgIdx) {
+      msgIdx = newIdx;
+      if (status) {
+        status.style.transition = 'opacity 0.2s';
+        status.style.opacity    = '0';
+        setTimeout(() => {
+          if (status) { status.textContent = messages[msgIdx]; status.style.opacity = '1'; }
+        }, 200);
+      }
+    }
+  }, 130);
+
+  // Garante que a intro fecha mesmo se algo travar
+  setTimeout(exitIntro, 5000);
+})();
+
 console.log('✅ App.js carregado completamente!');
