@@ -683,7 +683,7 @@ window.addEventListener('popstate', () => {
   }
 
   const START_TIME = Date.now();
-  const MIN_DURATION = 2000; // mínimo 2 segundos de intro
+  const MIN_DURATION = 5000; // mínimo 5 segundos de intro
 
   const ticker = setInterval(() => {
     progress += Math.random() * 7 + 3;
@@ -705,7 +705,7 @@ window.addEventListener('popstate', () => {
   }, 130);
 
   // Garante que a intro fecha mesmo se algo travar
-  setTimeout(exitIntro, 6000);
+  setTimeout(exitIntro, 8000);
 })();
 
 console.log('✅ App.js carregado completamente!');
