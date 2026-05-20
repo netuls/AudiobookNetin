@@ -102,10 +102,9 @@
   border: 2px solid transparent;
   border-top-color: rgba(168, 85, 247, 0.9);
   border-right-color: rgba(168, 85, 247, 0.3);
-  animation: intro-spin 1.8s linear infinite;
   opacity: 0;
-  animation-delay: 0.6s;
-  animation-fill-mode: forwards;
+  animation: intro-ring-appear 0.4s ease 0.9s forwards,
+             intro-spin 1.8s linear 1.3s infinite;
 }
 
 #intro-logo-ring2 {
@@ -115,14 +114,14 @@
   border: 1.5px solid transparent;
   border-bottom-color: rgba(139, 92, 246, 0.6);
   border-left-color: rgba(139, 92, 246, 0.2);
-  animation: intro-spin-reverse 2.8s linear infinite;
   opacity: 0;
-  animation-delay: 0.8s;
-  animation-fill-mode: forwards;
+  animation: intro-ring-appear 0.4s ease 1.1s forwards,
+             intro-spin-reverse 2.8s linear 1.5s infinite;
 }
 
-@keyframes intro-spin         { to { transform: rotate(360deg);  opacity: 1; } }
-@keyframes intro-spin-reverse { to { transform: rotate(-360deg); opacity: 1; } }
+@keyframes intro-ring-appear  { to { opacity: 1; } }
+@keyframes intro-spin         { from { transform: rotate(0deg);    } to { transform: rotate(360deg);  } }
+@keyframes intro-spin-reverse { from { transform: rotate(0deg);    } to { transform: rotate(-360deg); } }
 
 /* Imagem da logo */
 #intro-logo-img {
