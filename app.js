@@ -277,6 +277,7 @@ function doUndo() {
 
 // ── [NOVO] Sugestões ──
 function openSuggestionModal() {
+  console.log('Abrindo modal de sugestão...');
   document.getElementById('suggestion-modal').style.display = 'flex';
   document.getElementById('suggestion-name').value = '';
   document.getElementById('suggestion-text').value = '';
@@ -324,7 +325,7 @@ function submitSuggestion() {
     })
     .catch(err => {
       console.error('Erro ao enviar sugestão:', err);
-      err.textContent = 'Erro ao enviar. Tente novamente.';
+      document.getElementById('suggestion-err').textContent = 'Erro ao enviar. Tente novamente.';
     });
 }
 
@@ -430,7 +431,12 @@ window.closeSuggestionModal   = closeSuggestionModal;
 window.submitSuggestion       = submitSuggestion;
 
 // ── Eventos globais ──
-document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+document.addEventListener('keydown', e => { 
+  if (e.key === 'Escape') {
+    closeModal();
+    closeSuggestionModal();
+  }
+});
 
 const pwInput = document.getElementById('modal-pw');
 if (pwInput) pwInput.addEventListener('keydown', e => { if (e.key === 'Enter') confirmDelete(); });
@@ -438,9 +444,26 @@ if (pwInput) pwInput.addEventListener('keydown', e => { if (e.key === 'Enter') c
 document.getElementById('search-input').addEventListener('input',  e => applyFilter(e.target.value));
 document.getElementById('member-select').addEventListener('change', e => applyMemberFilter(e.target.value));
 document.getElementById('export-btn').addEventListener('click', exportExcel);
-document.getElementById('suggestion-btn').addEventListener('click', openSuggestionModal);
-document.getElementById('undo-btn').addEventListener('click', doUndo);
-document.getElementById('undo-close').addEventListener('click', hideUndo);
+
+// ── Eventos do modal de sugestão ──
+const suggestionBtn = document.getElementById('suggestion-btn');
+if (suggestionBtn) {
+  suggestionBtn.addEventListener('click', openSuggestionModal);
+  console.log('✅ Listener de sugestão adicionado');
+}
+
+const suggestionText = document.getElementById('suggestion-text');
+if (suggestionText) {
+  suggestionText.addEventListener('input', e => {
+    document.getElementById('char-current').textContent = e.target.value.length;
+  });
+}
+
+// ── Toast ──
+const undoBtn = document.getElementById('undo-btn');
+const undoClose = document.getElementById('undo-close');
+if (undoBtn) undoBtn.addEventListener('click', doUndo);
+if (undoClose) undoClose.addEventListener('click', hideUndo);
 
 // ── Auto-resize das textareas ──
 document.getElementById('body').addEventListener('input', e => {
@@ -449,14 +472,6 @@ document.getElementById('body').addEventListener('input', e => {
     e.target.style.height = e.target.scrollHeight + 'px';
   }
 });
-
-// ── Contagem de caracteres da sugestão ──
-const suggestionText = document.getElementById('suggestion-text');
-if (suggestionText) {
-  suggestionText.addEventListener('input', e => {
-    document.getElementById('char-current').textContent = e.target.value.length;
-  });
-}
 
 // ── Suporte ao botão Voltar/Avançar do navegador ──
 window.addEventListener('popstate', () => {
@@ -467,3 +482,5 @@ window.addEventListener('popstate', () => {
   if (memberSelect) memberSelect.value = filterMember;
   render();
 });
+
+console.log('✅ App.js carregado com sucesso!');
